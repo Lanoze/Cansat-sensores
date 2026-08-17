@@ -1,5 +1,5 @@
 /*
-  CANSAT - LEITURA DE SENSORES E AUDIO I2S (exFAT) 
+  CANSAT - LEITURA DE SENSORES E AUDIO I2S (exFAT)
   ARQUITETURA: PRODUTOR-CONSUMIDOR (ABRE/FECHA SEGURO)
   FORMATO CSV: Padrão Internacional (Delimitador: Vírgula / Decimal: Ponto)
   PROTEÇÃO SD: Pré-Alocação Extrema de 400MB para evitar travamentos
@@ -13,9 +13,14 @@
   [C5] tamanhoDadosAudio inicia em 0 e é atualizado apenas no fechamento — WAV correto sempre
   [C6] falhasConsecutivas declarado como volatile — consistência entre contextos de escrita/leitura
   [C7] reiniciarSD() reseta tamanhoDadosAudio — WAV não herda tamanho de sessão anterior
+  [C8] Tratamento de Garbage Collection:
+       - gravarComRetentativa() generalizada cobre áudio E CSV no mesmo barramento SPI
+       - Faz até 3 tentativas com 500ms de espera entre elas para qualquer arquivo
+       - O timeout interno da SdFat (SD_WRITE_TIMEOUT = 600ms, const não sobrescrevível)
+         somado às 2 retentativas cobre até ~1600ms de pausa por GC antes de falha permanente
+       - Distingue falha transitória (GC) de falha permanente (brownout)
+       - Loga no Serial quando o GC foi detectado e recuperado
 */
-
-//Alterações sugeridas pelo Claude na noite do dia 15/08/2026
 
 #include <Wire.h>
 #include <SPI.h>
@@ -72,12 +77,14 @@ const char* AUDIO_FILE = "/voo.wav";
 
 uint32_t pacoteId = 1;
 
-// Variáveis Globais de Controle do Áudio
-// [C5] Inicia em 0 — será acumulado durante a gravação e escrito no cabeçalho apenas no fechamento
+// [C5] Inicia em 0 — acumulado durante a gravação, escrito no cabeçalho apenas no fechamento
 uint32_t tamanhoDadosAudio = 0;
 
-// [C6] volatile — escrita pelo Core 0, lida em condições de controle do mesmo Core
+// [C6] volatile — escrita/lida em contextos de controle do Core 0
 volatile uint8_t falhasConsecutivas = 0;
+
+// [C8] Contador de eventos de GC detectados e recuperados — útil para diagnóstico
+volatile uint32_t eventosGarbageCollection = 0;
 
 const int SAMPLE_RATE = 16000;
 
@@ -87,6 +94,7 @@ void i2sInit(void);
 bool verificaMicrofoneINMP441(void);
 bool reiniciarSD(void);
 void atualizarCabecalhoWAV(FsFile &arquivo);
+bool gravarComRetentativa(FsFile &arquivo, const uint8_t* dados, size_t tamanho, const char* label);
 void sdManagerTask(void *pvParameters);
 void enviaParaRAM(float accX, float accY, float accZ,
                   float gyroX, float gyroY, float gyroZ,
@@ -95,7 +103,7 @@ void enviaParaRAM(float accX, float accY, float accZ,
 
 // =====================
 // CABEÇALHO WAV DINÂMICO
-// Chamado apenas no fechamento do arquivo (setup não chama mais com tamanho falso)
+// Chamado apenas no fechamento do arquivo
 // =====================
 void atualizarCabecalhoWAV(FsFile &arquivo) {
   byte header[44];
@@ -136,6 +144,52 @@ void atualizarCabecalhoWAV(FsFile &arquivo) {
   arquivo.seek(0);
   arquivo.write(header, 44);
   arquivo.seek(posicaoAtual);
+}
+
+// =====================
+// [C8] GRAVAÇÃO GENÉRICA COM RETENTATIVA (áudio e CSV)
+//
+// Por que isso trata o garbage collection:
+// Quando o cartão entra em GC, o write() retorna 0 bytes gravados em qualquer
+// arquivo — pois o problema é no barramento SPI, compartilhado entre áudio e CSV.
+// Em vez de declarar falha imediatamente, aguardamos 500ms e tentamos novamente.
+// Se após 3 tentativas ainda falhar, é falha real (brownout ou problema físico).
+//
+// Parâmetros:
+//   arquivo  — FsFile de destino (audioFile ou csvFile)
+//   dados    — ponteiro para os bytes a gravar
+//   tamanho  — quantidade de bytes esperada
+//   label    — string curta para identificar no log ("AUDIO" ou "CSV")
+// =====================
+bool gravarComRetentativa(FsFile &arquivo, const uint8_t* dados, size_t tamanho, const char* label) {
+  const int MAX_TENTATIVAS = 3;
+  const int ESPERA_MS      = 500;
+
+  for (int tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+    size_t bytesEscritos = arquivo.write(dados, tamanho);
+
+    if (bytesEscritos == tamanho) {
+      if (tentativa > 1) {
+        eventosGarbageCollection++;
+        Serial.printf("-> [GC] %s: cartao recuperou na tentativa %d. Total GC: %lu\n",
+                      label, tentativa, (unsigned long)eventosGarbageCollection);
+      }
+      falhasConsecutivas = 0;
+      return true;
+    }
+
+    Serial.printf("-> [AVISO] %s: write retornou %u/%u bytes (tentativa %d/%d). Aguardando %dms...\n",
+                  label, bytesEscritos, tamanho, tentativa, MAX_TENTATIVAS, ESPERA_MS);
+
+    if (tentativa < MAX_TENTATIVAS) {
+      vTaskDelay(pdMS_TO_TICKS(ESPERA_MS));
+    }
+  }
+
+  falhasConsecutivas++;
+  Serial.printf("-> [ERRO] %s: falha permanente apos %d tentativas. Falhas seguidas: %u\n",
+                label, MAX_TENTATIVAS, (unsigned)falhasConsecutivas);
+  return false;
 }
 
 // =====================
@@ -230,9 +284,8 @@ void setup() {
         Serial.println("-> [AVISO] Falha na pre-alocacao. O voo prosseguira normalmente.");
       }
 
-      // [C5] tamanhoDadosAudio = 0: escreve cabeçalho com tamanho real (zero por enquanto).
-      // Será atualizado com o valor correto apenas no fechamento do arquivo.
-      // Isso garante que o WAV seja sempre válido, independente da duração do voo.
+      // [C5] Cabeçalho com tamanho real (zero por enquanto).
+      // Será atualizado com o valor correto apenas no fechamento.
       tamanhoDadosAudio = 0;
       atualizarCabecalhoWAV(audioFile);
     }
@@ -324,8 +377,7 @@ void sdInit(void) {
 bool reiniciarSD() {
   Serial.println("\n-> [SISTEMA] Tentando reiniciar modulo SD (Soft Reset)...");
 
-  // [C5+C7] Atualiza o cabeçalho WAV com o tamanho real gravado até agora,
-  // fecha ambos os arquivos de forma graciosa e reseta o contador de áudio.
+  // [C5+C7] Atualiza cabeçalho WAV, fecha arquivos graciosamente e reseta contadores
   if (audioFile) {
     atualizarCabecalhoWAV(audioFile);
     audioFile.close();
@@ -341,7 +393,6 @@ bool reiniciarSD() {
   sd_spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
 
   // [C2] Reinicia na mesma velocidade do sdInit() — 1MHz
-  // Usar 4MHz aqui aumenta a chance de falha quando o circuito já está instável
   if (!SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(1), &sd_spi))) {
     Serial.println("-> [FALHA] SD recusou reinicio.");
     sdOk = false;
@@ -363,8 +414,8 @@ bool reiniciarSD() {
     return false;
   }
 
-  // [C7] Reseta o contador de áudio — o novo arquivo começa do zero
-  tamanhoDadosAudio = 0;
+  // [C7] Reseta contadores — novo arquivo começa do zero
+  tamanhoDadosAudio  = 0;
   falhasConsecutivas = 0;
 
   Serial.println("-> [SUCESSO] SD reiniciado! Retomando...");
@@ -488,41 +539,34 @@ void sdManagerTask(void *pvParameters) {
         buffer16[i] = (int16_t)amostraComGanho;
       }
 
-      size_t bytesToWrite  = samplesRead * 2;
-      size_t bytesEscritos = audioFile.write((const uint8_t*)buffer16, bytesToWrite);
-
-      if (bytesEscritos == bytesToWrite) {
-        falhasConsecutivas = 0;
-        tamanhoDadosAudio += bytesEscritos;
-      } else {
-        falhasConsecutivas++;
-        Serial.printf("-> [ERRO] Falha ao gravar audio. Falhas seguidas: %u\n",
-                      (unsigned)falhasConsecutivas);
+      // [C8] Usa a função genérica com retentativa em vez de write() direto.
+      // Cobre pausas de GC no barramento antes de declarar falha permanente.
+      gravarComRetentativa(audioFile, (const uint8_t*)buffer16, samplesRead * 2, "AUDIO");
+      // Atualiza o contador de áudio apenas em caso de sucesso
+      if (falhasConsecutivas == 0) {
+        tamanhoDadosAudio += samplesRead * 2;
       }
     }
 
     // — 2. DESCARREGA CSV A CADA 2 SEGUNDOS —
     if (millis() - ultimoWriteCSV >= 2000) {
-      localCsvBuffer[0]      = '\0';
+      localCsvBuffer[0]       = '\0';
       bool temDadosParaGravar = false;
 
       if (xSemaphoreTake(ramMutex, pdMS_TO_TICKS(15)) == pdTRUE) {
         if (csvBuffer[0] != '\0') {
           strcpy(localCsvBuffer, csvBuffer);
-          csvBuffer[0]       = '\0';
-          temDadosParaGravar = true;
+          csvBuffer[0]        = '\0';
+          temDadosParaGravar  = true;
         }
         xSemaphoreGive(ramMutex);
       }
 
       if (temDadosParaGravar && sdOk && csvFile) {
-        size_t escr = csvFile.print(localCsvBuffer);
-        if (escr > 0) {
-          Serial.print("-> Lote CSV salvo! Bytes: ");
-          Serial.println(escr);
-        } else {
-          Serial.println("-> [ERRO] SD retornou 0 bytes na gravacao do CSV.");
-          falhasConsecutivas++;
+        size_t tamanhoCSV = strlen(localCsvBuffer);
+        bool ok = gravarComRetentativa(csvFile, (const uint8_t*)localCsvBuffer, tamanhoCSV, "CSV");
+        if (ok) {
+          Serial.printf("-> Lote CSV salvo! Bytes: %u\n", tamanhoCSV);
         }
       }
       ultimoWriteCSV = millis();
@@ -530,8 +574,7 @@ void sdManagerTask(void *pvParameters) {
 
     // — 3. SYNC A CADA 5 SEGUNDOS —
     // [C3] Apenas sync — sem atualizarCabecalhoWAV() aqui.
-    // O cabeçalho WAV é atualizado somente no fechamento gracioso do arquivo,
-    // eliminando o stall causado pelo seek() periódico.
+    // O cabeçalho WAV é atualizado somente no fechamento gracioso do arquivo.
     if (millis() - ultimoSync >= 5000) {
       if (sdOk) {
         if (audioFile) audioFile.sync();
