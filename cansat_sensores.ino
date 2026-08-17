@@ -163,7 +163,7 @@ void atualizarCabecalhoWAV(FsFile &arquivo) {
 // =====================
 bool gravarComRetentativa(FsFile &arquivo, const uint8_t* dados, size_t tamanho, const char* label) {
   const int MAX_TENTATIVAS = 3;
-  const int ESPERA_MS      = 500;
+  const int ESPERA_MS      = 1000;
 
   for (int tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
     size_t bytesEscritos = arquivo.write(dados, tamanho);
