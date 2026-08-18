@@ -217,7 +217,7 @@ void setup() {
       );
     }
   }
-
+  Serial.println("Versão sem Pré-alocação");
   Serial.println("=== Setup concluido ==="); 
 }
 
