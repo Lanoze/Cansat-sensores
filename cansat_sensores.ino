@@ -271,9 +271,9 @@ void sdInit(void) {
     Serial.println("Falha ao montar SD.");
     // Imprime o código técnico interno da biblioteca SdFat em caso de falha de montagem
     Serial.print("Erro SD - Code: 0x");
-    Serial.print(SD.sdCard()->errorCode(), HEX);
+    Serial.print(SD.card()->errorCode(), HEX);
     Serial.print(", Data: 0x");
-    Serial.println(SD.sdCard()->errorData(), HEX);
+    Serial.println(SD.card()->errorData(), HEX);
     return;
   }
   
@@ -374,8 +374,8 @@ void sdManagerTask(void *pvParameters) {
       Serial.println("\n-> [CRITICO] Erro na gravacao do SD. Coletando diagnostico...");
       
       // Captura o código hexadecimal exato gerado pela controladora do cartão
-      uint8_t errCode = SD.sdCard()->errorCode();
-      uint8_t errData = SD.sdCard()->errorData();
+      uint8_t errCode = SD.card()->errorCode();
+      uint8_t errData = SD.card()->errorData();
       
       Serial.printf("-> [DIAGNOSTICO SD] Error Code: 0x%02X | Error Data: 0x%02X\n", errCode, errData);
       Serial.println("-> Aplicando HARD RESET no CanSat...");
