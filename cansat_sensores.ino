@@ -297,7 +297,7 @@ void setup() {
       xTaskCreatePinnedToCore(
         sdManagerTask,
         "SD_Manager",
-        8192,
+        16384,
         NULL,
         1,
         NULL,
@@ -307,6 +307,7 @@ void setup() {
   }
 
   Serial.println("=== Setup concluido ===");
+  delay(2000);
 }
 
 // =====================
