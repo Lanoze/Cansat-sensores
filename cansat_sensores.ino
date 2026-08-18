@@ -162,34 +162,30 @@ void atualizarCabecalhoWAV(FsFile &arquivo) {
 //   label    — string curta para identificar no log ("AUDIO" ou "CSV")
 // =====================
 bool gravarComRetentativa(FsFile &arquivo, const uint8_t* dados, size_t tamanho, const char* label) {
-  const int MAX_TENTATIVAS = 3;
-  const int ESPERA_MS      = 1000;
+    const int MAX_TENTATIVAS = 3;
+    const int ESPERA_MS      = 1000;
 
-  for (int tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
-    size_t bytesEscritos = arquivo.write(dados, tamanho);
+    for (int tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+        size_t bytesEscritos = arquivo.write(dados, tamanho);
 
-    if (bytesEscritos == tamanho) {
-      if (tentativa > 1) {
-        eventosGarbageCollection++;
-        Serial.printf("-> [GC] %s: cartao recuperou na tentativa %d. Total GC: %lu\n",
-                      label, tentativa, (unsigned long)eventosGarbageCollection);
-      }
-      falhasConsecutivas = 0;
-      return true;
+        if (bytesEscritos == tamanho) {
+            // Sucesso...
+            return true;
+        }
+
+        // CAPTURA O ERRO DO CARTÃO
+        uint8_t errCode = SD.card()->errorCode();
+        uint8_t errData = SD.card()->errorData();
+        Serial.printf("-> [ERRO] %s: write falhou. Code: 0x%02X, Data: 0x%02X (tentativa %d)\n",
+                      label, errCode, errData, tentativa);
+
+        if (tentativa < MAX_TENTATIVAS) {
+            vTaskDelay(pdMS_TO_TICKS(ESPERA_MS));
+        }
     }
 
-    Serial.printf("-> [AVISO] %s: write retornou %u/%u bytes (tentativa %d/%d). Aguardando %dms...\n",
-                  label, bytesEscritos, tamanho, tentativa, MAX_TENTATIVAS, ESPERA_MS);
-
-    if (tentativa < MAX_TENTATIVAS) {
-      vTaskDelay(pdMS_TO_TICKS(ESPERA_MS));
-    }
-  }
-
-  falhasConsecutivas++;
-  Serial.printf("-> [ERRO] %s: falha permanente apos %d tentativas. Falhas seguidas: %u\n",
-                label, MAX_TENTATIVAS, (unsigned)falhasConsecutivas);
-  return false;
+    falhasConsecutivas++;
+    return false;
 }
 
 // =====================
@@ -376,53 +372,22 @@ void sdInit(void) {
 // SOFT RESET DO SD
 // =====================
 bool reiniciarSD() {
-  Serial.println("\n-> [SISTEMA] Tentando reiniciar modulo SD (Soft Reset)...");
+    // Fecha arquivos
+    if (audioFile) { audioFile.close(); }
+    if (csvFile)   { csvFile.close(); }
 
-  // [C5+C7] Atualiza cabeçalho WAV, fecha arquivos graciosamente e reseta contadores
-  if (audioFile) {
-    atualizarCabecalhoWAV(audioFile);
-    audioFile.close();
-  }
-  if (csvFile) {
-    csvFile.close();
-  }
+    SD.end();           // Desmonta o sistema de arquivos
+    sd_spi.end();       // Libera o barramento SPI
+    delay(500);
 
-  SD.end();
-  sd_spi.end();
-  delay(200);
-
-  sd_spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
-
-  // [C2] Reinicia na mesma velocidade do sdInit() — 1MHz
-  if (!SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(1), &sd_spi))) {
-    Serial.println("-> [FALHA] SD recusou reinicio.");
-    sdOk = false;
-    return false;
-  }
-
-  sdOk = true;
-
-  if (SD.exists(AUDIO_FILE)) {
-    SD.remove(AUDIO_FILE);
-    delay(50);
-  }
-
-  audioFile = SD.open(AUDIO_FILE, O_WRITE | O_CREAT | O_AT_END);
-  csvFile   = SD.open(LOG_FILE,   O_WRITE | O_CREAT | O_APPEND);
-
-  if (!audioFile || !csvFile) {
-    Serial.println("-> [FALHA] Falhou ao reabrir arquivos.");
-    return false;
-  }
-
-  // [C7] Reseta contadores — novo arquivo começa do zero
-  tamanhoDadosAudio  = 0;
-  falhasConsecutivas = 0;
-
-  Serial.println("-> [SUCESSO] SD reiniciado! Retomando...");
-  return true;
+    // Reconfigura o SPI
+    sd_spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
+    if (!SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_HZ(400000), &sd_spi))) {
+        return false;
+    }
+    sdOk = true;
+    // Reabre arquivos...
 }
-
 // =====================
 // INICIALIZAÇÃO DO I2S
 // =====================
