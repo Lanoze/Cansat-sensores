@@ -129,7 +129,7 @@ void setup() {
       xTaskCreatePinnedToCore(
         sdManagerTask,  
         "SD_Manager",      
-        4096,             
+        8192,             // Alterado de 4096 para 8192 bytes
         NULL,             
         1,                
         NULL,             
