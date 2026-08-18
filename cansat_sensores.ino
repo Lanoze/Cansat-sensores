@@ -137,7 +137,7 @@ void setup() {
       );
     }
   }
-
+  Serial.println("Versão sem microfone");
   Serial.println("=== Setup concluido ==="); 
 }
 
