@@ -22,6 +22,8 @@
        - Loga no Serial quando o GC foi detectado e recuperado
 */
 
+//Sugestões do Deepseek
+
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_Sensor.h>
@@ -301,7 +303,7 @@ void setup() {
       );
     }
   }
-
+  Serial.println("Sugestões do Deepseek");
   Serial.println("=== Setup concluido ===");
   delay(2000);
 }
