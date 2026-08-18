@@ -1,6 +1,6 @@
 /*
   CANSAT - LEITURA DE SENSORES E AUDIO I2S (exFAT) 
-  ARQUITETURA: PRODUTOR-CONSUMIDOR (ABRE/FECHA SEGURO)
+  ARQUITETURA: PRODUTOR-CONSUMIDOR (COM CAPTURA DE CÓDIGO DE ERRO DO SD)
   FORMATO CSV: Padrão Internacional (Delimitador: Vírgula / Decimal: Ponto)
   PROTEÇÃO SD: HARD RESET EM CASO DE FALHA (SEM PRÉ-ALOCAÇÃO)
 */
@@ -181,7 +181,6 @@ void setup() {
   if (sdOk) {
     bool csvExiste = SD.exists(LOG_FILE);
 
-    // Abre o CSV globalmente para escrita dinâmica (Sem preAllocate)
     csvFile = SD.open(LOG_FILE, O_WRITE | O_CREAT | O_APPEND);
     if (!csvExiste && csvFile) {
       csvFile.print("Pacote,Tempo_ms,AccX,AccY,AccZ,GyroX,GyroY,GyroZ,Temp_MPU(C),Temp_BMP(C),Pressao(hPa),Altitude(m),Temp_SHT(C),Umidade_SHT(%),Temp_DS18B20(C)\r\n");
@@ -195,7 +194,6 @@ void setup() {
       delay(50); 
     }
 
-    // Abre o áudio para escrita truncada dinâmica (Sem preAllocate)
     audioFile = SD.open(AUDIO_FILE, O_WRITE | O_CREAT | O_TRUNC);
     if (audioFile) {
       atualizarCabecalhoWAV(audioFile);
@@ -217,7 +215,7 @@ void setup() {
       );
     }
   }
-  Serial.println("Versão sem Pré-alocação");
+  Serial.println("Versão sem pré-alocação e com código de erro");
   Serial.println("=== Setup concluido ==="); 
 }
 
@@ -271,6 +269,11 @@ void sdInit(void) {
 
   if (!SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(1), &sd_spi))) {
     Serial.println("Falha ao montar SD.");
+    // Imprime o código técnico interno da biblioteca SdFat em caso de falha de montagem
+    Serial.print("Erro SD - Code: 0x");
+    Serial.print(SD.sdCard()->errorCode(), HEX);
+    Serial.print(", Data: 0x");
+    Serial.println(SD.sdCard()->errorData(), HEX);
     return;
   }
   
@@ -366,12 +369,20 @@ void sdManagerTask(void *pvParameters) {
 
   while(1) {
     
-    // CORREÇÃO: VERIFICA SE HOUVE FALHA E PREPARA REINÍCIO COMPLETO DO MICROCONTROLADOR
+    // SE HOUVER FALHA, IMPRIME O CÓDIGO DE ERRO DO HARDWARE ANTES DE REINICIAR
     if (!sdOk || falhasConsecutivas >= 1) {
-      Serial.println("\n-> [CRITICO] Erro na gravacao do SD. Aplicando HARD RESET no CanSat...");
+      Serial.println("\n-> [CRITICO] Erro na gravacao do SD. Coletando diagnostico...");
+      
+      // Captura o código hexadecimal exato gerado pela controladora do cartão
+      uint8_t errCode = SD.sdCard()->errorCode();
+      uint8_t errData = SD.sdCard()->errorData();
+      
+      Serial.printf("-> [DIAGNOSTICO SD] Error Code: 0x%02X | Error Data: 0x%02X\n", errCode, errData);
+      Serial.println("-> Aplicando HARD RESET no CanSat...");
+
       if (audioFile) audioFile.close();
       if (csvFile) csvFile.close();
-      vTaskDelay(pdMS_TO_TICKS(200)); 
+      vTaskDelay(pdMS_TO_TICKS(500)); 
       ESP.restart(); 
     }
 
@@ -398,7 +409,7 @@ void sdManagerTask(void *pvParameters) {
         tamanhoDadosAudio += bytesEscritos;
       } else {
         falhasConsecutivas++;
-        Serial.printf("-> [ERRO] Falha ao gravar audio.\n");
+        Serial.printf("-> [ERRO] Falha ao gravar audio no arquivo WAV.\n");
       }
     }
 
