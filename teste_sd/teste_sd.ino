@@ -45,10 +45,10 @@ void testa(uint8_t mhz) {
   sd_spi.end(); 
   sd_spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
 
-  if (!SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(mhz), &sd_spi))) {
+  while(!SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(mhz), &sd_spi))) {
     Serial.printf("[X] Nem montou. err=0x%02X data=0x%02X\n",
                   SD.sdErrorCode(), SD.sdErrorData());
-    return;
+    delay(500);
   }
   
   if (mhz == velocidades[0]) infoCartao();
