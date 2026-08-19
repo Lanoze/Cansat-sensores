@@ -5,7 +5,6 @@ Pinos: SCK=14 MISO=27 MOSI=26 CS=25
 
 ========== TESTE A 16 MHz ==========
 Formato: FAT32
-Livre: 63782 MB | Cluster: 32 KB
 A falha ocorreu na escrita
 [Erro no meio da operação]. err=0x24 data=0x05
 [X] Nem montou. err=0x01 data=0x00
