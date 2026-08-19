@@ -1,0 +1,20 @@
+
+
+### TESTE ISOLADO DO SD ###
+Pinos: SCK=14 MISO=27 MOSI=26 CS=25
+
+========== TESTE A 16 MHz ==========
+Formato: exFAT
+Livre: 63794 MB | Cluster: 128 KB
+-> RESULTADO 16 MHz: 900 ok / 0 falhas | write+sync medio 0 ms, pior 12 ms
+
+========== TESTE A 4 MHz ==========
+-> RESULTADO 4 MHz: 900 ok / 0 falhas | write+sync medio 0 ms, pior 9 ms
+
+========== TESTE A 2 MHz ==========
+-> RESULTADO 2 MHz: 900 ok / 0 falhas | write+sync medio 0 ms, pior 22 ms
+
+========== TESTE A 1 MHz ==========
+-> RESULTADO 1 MHz: 900 ok / 0 falhas | write+sync medio 0 ms, pior 20 ms
+
+### FIM. Compare os resultados acima. ###
