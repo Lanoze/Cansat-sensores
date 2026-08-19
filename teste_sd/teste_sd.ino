@@ -25,6 +25,7 @@ SdFs SD;
 
 const uint8_t velocidades[] = {16, 4, 2, 1};
 const int LINHAS = 900; // 3 minutos
+uint8_t falhas = 0;
 
 void infoCartao() {
   uint8_t tipo = SD.fatType();
@@ -38,17 +39,35 @@ void infoCartao() {
   }
 }
 
-void testa(uint8_t mhz) {
-  Serial.printf("\n========== TESTE A %u MHz ==========\n", mhz);
-
+bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
+  uint8_t tentativas = 0;
   // Reinicia o barramento SPI fisicamente a cada teste para o SD aceitar a nova frequência
   sd_spi.end(); 
   sd_spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
 
-  while(!SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(mhz), &sd_spi))) {
+  while(!SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(mhz), &sd_spi)) && tentativas < maximo_tentativas) {
     Serial.printf("[X] Nem montou. err=0x%02X data=0x%02X\n",
                   SD.sdErrorCode(), SD.sdErrorData());
+    tentativas++;
     delay(500);
+  }
+  falhas += tentativas;
+  if (tentativas == maximo_tentativas){
+    Serial.println("O cartão não se recuperou");
+    return false;
+  }
+  if(tentativas > 0)
+    Serial.printf("O cartão se recuperou na tentativa %u\n", tentativas);
+  return true;
+}
+
+void testa(uint8_t mhz) {
+  Serial.printf("\n========== TESTE A %u MHz ==========\n", mhz);
+  falhas = 0;
+
+  if(!montar_SD(8, mhz)){
+    Serial.println("Indo para a próxima frequência...");
+    return;
   }
   
   if (mhz == velocidades[0]) infoCartao();
@@ -68,7 +87,7 @@ void testa(uint8_t mhz) {
     return;
   }
 
-  int ok = 0, falhas = 0, primeiraFalha = -1;
+  int ok = 0, primeiraFalha = -1;
   uint32_t pior = 0, soma = 0;
   char linha[64];
 
@@ -95,12 +114,11 @@ void testa(uint8_t mhz) {
       ok++;
     } else {
       falhas++;
-      if (primeiraFalha < 0) primeiraFalha = i;
-      Serial.printf("  FALHA na linha %d -> err=0x%02X data=0x%02X\n",
-                    i, SD.sdErrorCode(), SD.sdErrorData());
-      if (falhas >= 5) {
-        Serial.println("  (5 falhas, abortando esta velocidade)");
-        break;
+      if(primeiraFalha == -1) primeiraFalha = i;
+      Serial.printf("[Erro no meio da operação]. err=0x%02X data=0x%02X\n", SD.sdErrorCode(), SD.sdErrorData());
+      if(!montar_SD(8, mhz)){
+        Serial.println("Indo para a próxima frequência 2...");
+        return;
       }
     }
     delay(200); // Simulando a taxa de amostragem
