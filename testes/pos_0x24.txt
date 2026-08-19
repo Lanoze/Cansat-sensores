@@ -1,0 +1,67 @@
+:15592
+load:0x40080400,len:3164
+entry 0x4008059c
+MPU6050: FALHOU
+BMP280: FALHOU
+SHT30: FALHOU
+DS18B20: FALHOU
+INMP441: FALHA (Desconectado ou sem sinal)
+Número de falhas: 0
+-> Arquivos abertos! Iniciando Core 0.
+Versão sem pré-alocação e com código de erro
+=== Setup concluido ===
+Guru Meditation Error: Core  0 panic'ed (Unhandled debug exception). 
+Debug exception reason: Stack canary watchpoint triggered (SD_Manager) 
+Core  0 register dump:
+PC      : 0x400855c0  PS      : 0x00060036  A0      : 0x800d22ff  A1      : 0x3ffc8330  
+A2      : 0x3ffc8f5c  A3      : 0x00000000  A4      : 0x00004000  A5      : 0x3ffcb01c  
+A6      : 0x00000003  A7      : 0x00000400  A8      : 0x800da1c6  A9      : 0x3ffc8300  
+A10     : 0x00000736  A11     : 0x00000000  A12     : 0x00000736  A13     : 0x00004cc0  
+A14     : 0x3ffc6d54  A15     : 0x00060023  SAR     : 0x0000000a  EXCCAUSE: 0x00000001  
+EXCVADDR: 0x00000000  LBEG    : 0x400855be  LEND    : 0x400855c9  LCOUNT  : 0x000001f3  
+
+
+Backtrace: 0x400855bd:0x3ffc8330 0x400d22fc:0x3ffc8340 0x40088f19:0x3ffccf80
+
+
+
+
+ELF file SHA256: 008557bd1
+
+ets Jul 29 2019 12:21:46
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:4640
+load:0x40078000,len:15592
+load:0x40080400,len:3164
+entry 0x4008059c
+MPU6050: FALHOU
+BMP280: FALHOU
+SHT30: FALHOU
+DS18B20: FALHOU
+INMP441: FALHA (Desconectado ou sem sinal)
+Número de falhas: 0
+-> Arquivos abertos! Iniciando Core 0.
+Versão sem pré-alocação e com código de erro
+=== Setup concluido ===
+Guru Meditation Error: Core  0 panic'ed (Unhandled debug exception). 
+Debug exception reason: Stack canary watchpoint triggered (SD_Manager) 
+Core  0 register dump:
+PC      : 0x400855c0  PS      : 0x00060036  A0      : 0x800d22ff  A1      : 0x3ffc8330  
+A2      : 0x3ffc8f5c  A3      : 0x00000000  A4      : 0x00004000  A5      : 0x3ffcb01c  
+A6      : 0x00000003  A7      : 0x00000400  A8      : 0x800da1c6  A9      : 0x3ffc8300  
+A10     : 0x00000736  A11     : 0x00000000  A12     : 0x00000736  A13     : 0x00004e00  
+A14     : 0x3ffc6d54  A15     : 0x00060023  SAR     : 0x0000000a  EXCCAUSE: 0x00000001  
+EXCVADDR: 0x00000000  LBEG    : 0x400855be  LEND    : 0x400855c9  LCOUNT  : 0x000001f3  
+
+
+Backtrace: 0x400855bd:0x3ffc8330 0x400d22fc:0x3ffc8340 0x40088f19:0x3ffccf80
+
+
+
+
+ELF file SHA256: 008557bd1
+
