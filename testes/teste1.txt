@@ -1,0 +1,90 @@
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x19 data=0x00
+Número de falhas: 6
+O cartão se recuperou na tentativa 6
+-> Arquivos abertos! Iniciando Core 0.
+Versão sem pré-alocação e com código de erro
+=== Setup concluido ===
+-> [ERRO] Falha ao gravar audio no arquivo WAV.
+Erro 0x21 e Data 0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x12 data=0x01
+Número de falhas: 16
+O cartão se recuperou na tentativa 10
+-> Lote 0 CSV salvo no SD! Bytes: 9088
+-> Lote 10 CSV salvo no SD! Bytes: 760
+-> Lote 20 CSV salvo no SD! Bytes: 760
+-> Lote 30 CSV salvo no SD! Bytes: 842
+-> Lote 40 CSV salvo no SD! Bytes: 770
+-> Lote 50 CSV salvo no SD! Bytes: 847
+-> Lote 60 CSV salvo no SD! Bytes: 770
+-> Lote 70 CSV salvo no SD! Bytes: 770
+-> [ERRO] Falha ao gravar audio no arquivo WAV.
+Erro 0x24 e Data 0x05
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0xFF
+Número de falhas: 27
+O cartão se recuperou na tentativa 11
+-> [ERRO] Falha ao gravar audio no arquivo WAV.
+Erro 0x0D e Data 0x05
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x0C data=0xFF
+Número de falhas: 29
+O cartão se recuperou na tentativa 2
+-> [ERRO] Falha ao gravar audio no arquivo WAV.
+Erro 0x21 e Data 0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+Número de falhas: 32
+O cartão se recuperou na tentativa 3
+-> [ERRO] Falha ao gravar audio no arquivo WAV.
+Erro 0x21 e Data 0xFF
+[X] Nem montou. err=0x12 data=0xFF
+[X] Nem montou. err=0x19 data=0x00
+Número de falhas: 34
+O cartão se recuperou na tentativa 2
+-> [ERRO] Falha ao gravar audio no arquivo WAV.
+Erro 0x0E e Data 0x05
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+Número de falhas: 39
+O cartão se recuperou na tentativa 5
+-> [ERRO] O SD falhou na gravacao do CSV.
+Erro 0x24 e Data 0x05
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x12 data=0xFF
+Número de falhas: 44
+O cartão se recuperou na tentativa 5
+-> [ERRO] Falha ao gravar audio no arquivo WAV.
+Erro 0x0D e Data 0x05
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
