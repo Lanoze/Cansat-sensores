@@ -99,10 +99,13 @@ void testa(uint8_t mhz) {
     
     // Grava os dados no buffer do cartão
     bool bom = (f.write((const uint8_t*)linha, n) == (size_t)n);
-    
+    if(!bom) Serial.println("A falha ocorreu na escrita");
     // Faz o sync (gravação física + FAT) apenas a cada 50 linhas ou na última
     if (bom && (i % 50 == 0 || i == LINHAS)) {
-        if (!f.sync()) bom = false;
+        if (!f.sync()){
+          Serial.println("A falha ocorreu na sincronização");
+          bom = false;
+        }
     }
     
     uint32_t dt = millis() - t0;
