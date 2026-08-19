@@ -1,0 +1,84 @@
+MPU6050: FALHOU
+BMP280: FALHOU
+SHT30: FALHOU
+DS18B20: FALHOU
+INMP441: FALHA (Desconectado ou sem sinal)
+Número de falhas: 0
+-> Arquivos abertos! Iniciando Core 0.
+Versão sem pré-alocação e com código de erro
+=== Setup concluido ===
+-> Lote 0 CSV salvo no SD! Bytes: 805
+-> Lote 10 CSV salvo no SD! Bytes: 836
+-> Lote 20 CSV salvo no SD! Bytes: 836
+-> Lote 30 CSV salvo no SD! Bytes: 836
+-> Lote 40 CSV salvo no SD! Bytes: 760
+-> Lote 50 CSV salvo no SD! Bytes: 770
+-> Lote 60 CSV salvo no SD! Bytes: 847
+-> Lote 70 CSV salvo no SD! Bytes: 770
+-> Lote 80 CSV salvo no SD! Bytes: 770
+-> Lote 90 CSV salvo no SD! Bytes: 770
+-> Lote 100 CSV salvo no SD! Bytes: 780
+-> Lote 110 CSV salvo no SD! Bytes: 780
+-> Lote 120 CSV salvo no SD! Bytes: 780
+-> Lote 130 CSV salvo no SD! Bytes: 780
+-> Lote 140 CSV salvo no SD! Bytes: 780
+-> Lote 150 CSV salvo no SD! Bytes: 780
+-> Lote 160 CSV salvo no SD! Bytes: 780
+-> Lote 170 CSV salvo no SD! Bytes: 780
+-> Lote 180 CSV salvo no SD! Bytes: 780
+-> Lote 190 CSV salvo no SD! Bytes: 780
+-> Lote 200 CSV salvo no SD! Bytes: 780
+-> [ERRO] Falha ao gravar audio no arquivo WAV.
+Erro 0x0D e Data 0x05
+[X] Nem montou. err=0x01 data=0x00(tentativa 1/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 2/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 3/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 4/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 5/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 6/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 7/20)
+[X] Nem montou. err=0x17 data=0xFF(tentativa 8/20)
+Número de falhas: 9
+O cartão se recuperou na tentativa 8
+-> [ERRO] Falha ao gravar audio no arquivo WAV.
+Erro 0x0D e Data 0x05
+[X] Nem montou. err=0x01 data=0x00(tentativa 1/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 2/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 3/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 4/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 5/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 6/20)
+[X] Nem montou. err=0x17 data=0xFF(tentativa 7/20)
+[X] Nem montou. err=0x17 data=0x01(tentativa 8/20)
+Número de falhas: 18
+O cartão se recuperou na tentativa 8
+-> [ERRO] Falha ao gravar audio no arquivo WAV.
+Erro 0x24 e Data 0x05
+[X] Nem montou. err=0x01 data=0x00(tentativa 1/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 2/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 3/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 4/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 5/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 6/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 7/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 8/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 9/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 10/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 11/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 12/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 13/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 14/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 15/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 16/20)
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+[X] Nem montou. err=0x12 data=0x01(tentativa 17/20)
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+Número de falhas: 36
+O cartão se recuperou na tentativa 17
+-> Lote 210 CSV salvo no SD! Bytes: 16380
+-> [ERRO] Falha ao gravar audio no arquivo WAV.
+Erro 0x0D e Data 0x00
+[X] Nem montou. err=0x01 data=0x00(tentativa 1/20)
+[X] Nem montou. err=0x01 data=0x00(tentativa 2/20)

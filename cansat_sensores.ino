@@ -27,7 +27,7 @@
 #define I2S_SCK_PIN 21
 #define BUFFER_CSV 2048*8
 #define SPI_FREQ_MHz 16
-#define MAX_TENTATIVAS 20
+#define MAX_TENTATIVAS 6
 
 #define SEALEVEL_HPA 1013.25 
 
@@ -133,6 +133,7 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   sd_spi.end(); 
   sd_spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
 
+  Serial.printf("Tentando (re)iniciar o cartão a %u MHz\n", mhz);
   while(!SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(mhz), &sd_spi)) && tentativas < maximo_tentativas) {
     Serial.printf("[X] Nem montou. err=0x%02X data=0x%02X",
                   SD.sdErrorCode(), SD.sdErrorData());
