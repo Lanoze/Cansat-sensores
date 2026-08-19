@@ -24,7 +24,8 @@
 // ---------- PINOS MICROFONE INMP441 (I2S) ----------
 #define I2S_WS_PIN  19  
 #define I2S_SD_PIN  22  
-#define I2S_SCK_PIN 21  
+#define I2S_SCK_PIN 21
+#define BUFFER_CSV 2048*8
 
 #define SEALEVEL_HPA 1013.25 
 
@@ -47,7 +48,7 @@ SemaphoreHandle_t ramMutex;
 FsFile audioFile;
 FsFile csvFile; 
 
-char csvBuffer[2048*8] = ""; //Onde os dados CSV são guardadados antes de serem enviados ao cartão SD
+char csvBuffer[BUFFER_CSV] = ""; //Onde os dados CSV são guardadados antes de serem enviados ao cartão SD
 
 bool mpuOk = false;
 bool bmpOk = false;
@@ -397,7 +398,7 @@ void sdManagerTask(void *pvParameters) {
 
   uint32_t ultimoWriteCSV = millis();
   uint32_t ultimoSync = millis();
-  char localCsvBuffer[2048] = "";
+  char localCsvBuffer[BUFFER_CSV] = "";
 
   // if(falha_inicial_SD) return;
   while(1) {
@@ -446,7 +447,7 @@ void sdManagerTask(void *pvParameters) {
       
       if (xSemaphoreTake(ramMutex, pdMS_TO_TICKS(15)) == pdTRUE) {
         if (csvBuffer[0] != '\0') {
-          strcpy(localCsvBuffer, csvBuffer);
+          strncpy(localCsvBuffer, csvBuffer, sizeof(localCsvBuffer) - 1);
           csvBuffer[0] = '\0'; //Indica que o buffer está vazio
           temDadosParaGravar = true;
         }
