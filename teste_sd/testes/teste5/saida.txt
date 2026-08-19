@@ -1,0 +1,35 @@
+
+
+### TESTE ISOLADO DO SD ###
+Pinos: SCK=14 MISO=27 MOSI=26 CS=25
+
+========== TESTE A 16 MHz ==========
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+O cartão se recuperou na tentativa 3
+Formato: exFAT
+Livre: 63793 MB | Cluster: 128 KB
+[Erro no meio da operação]. err=0x0A data=0xFF
+[X] Nem montou. err=0x17 data=0xFF
+O cartão se recuperou na tentativa 1
+[Erro no meio da operação]. err=0x0A data=0xFF
+[X] Nem montou. err=0x17 data=0xFF
+[X] Nem montou. err=0x17 data=0xFF
+O cartão se recuperou na tentativa 2
+[Erro no meio da operação]. err=0x0D data=0xFF
+[X] Nem montou. err=0x01 data=0xFF
+O cartão se recuperou na tentativa 1
+-> RESULTADO 16 MHz: 897 ok / 10 falhas | 1a falha na linha 58 | write+sync medio 0 ms, pior 5 ms
+
+========== TESTE A 4 MHz ==========
+-> RESULTADO 4 MHz: 900 ok / 0 falhas | write+sync medio 0 ms, pior 18 ms
+
+========== TESTE A 2 MHz ==========
+[Erro no meio da operação]. err=0x0D data=0xFF
+-> RESULTADO 2 MHz: 899 ok / 1 falhas | 1a falha na linha 50 | write+sync medio 0 ms, pior 12 ms
+
+========== TESTE A 1 MHz ==========
+-> RESULTADO 1 MHz: 900 ok / 0 falhas | write+sync medio 0 ms, pior 23 ms
+
+### FIM. Compare os resultados acima. ###
