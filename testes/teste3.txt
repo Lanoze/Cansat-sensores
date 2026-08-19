@@ -1,0 +1,126 @@
+MPU6050: FALHOU
+BMP280: FALHOU
+SHT30: FALHOU
+DS18B20: FALHOU
+INMP441: FALHA (Desconectado ou sem sinal)
+Número de falhas: 0
+-> Arquivos abertos! Iniciando Core 0.
+Versão sem pré-alocação e com código de erro
+=== Setup concluido ===
+-> Lote 0 CSV salvo no SD! Bytes: 805
+-> [ERRO] Falha ao gravar audio no arquivo WAV.
+Erro 0x24 e Data 0x05
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x17 data=0xFF
+[X] Nem montou. err=0x17 data=0xFF
+[X] Nem montou. err=0x17 data=0xFF
+Número de falhas: 6
+O cartão se recuperou na tentativa 6
+-> [ERRO] O SD falhou na gravacao do CSV.
+Erro 0x24 e Data 0x05
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+[X] Nem montou. err=0x01 data=0x00
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+[X] Nem montou. err=0x01 data=0x00
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+[X] Nem montou. err=0x01 data=0x00
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.
+Número de falhas: 26
+O cartão não se recuperou
+Saindo de sdManagerTask
+E (78323) FreeRTOS: FreeRTOS Task "SD_Manager" should not return, Aborting now!
+
+abort() was called at PC 0x40088f37 on core 0
+
+
+Backtrace: 0x40088344:0x3ffd2ec0 0x40088309:0x3ffd2ee0 0x4008e121:0x3ffd2f00 0x40088f37:0x3ffd2f80
+
+
+
+
+ELF file SHA256: e17d7d41f
+
+Rebooting...
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:4640
+load:0x40078000,len:15592
+load:0x40080400,len:3164
+entry 0x4008059c
+MPU6050: FALHOU
+BMP280: FALHOU
+SHT30: FALHOU
+DS18B20: FALHOU
+INMP441: FALHA (Desconectado ou sem sinal)
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00
+[X] Nem montou. err=0x01 data=0x00

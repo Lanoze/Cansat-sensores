@@ -134,9 +134,10 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   sd_spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
 
   while(!SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(mhz), &sd_spi)) && tentativas < maximo_tentativas) {
-    Serial.printf("[X] Nem montou. err=0x%02X data=0x%02X\n",
+    Serial.printf("[X] Nem montou. err=0x%02X data=0x%02X",
                   SD.sdErrorCode(), SD.sdErrorData());
     tentativas++;
+    Serial.printf( "(tentativa %u/%u)\n", tentativas, MAX_TENTATIVAS);
     delay(500);
   }
   falhas += tentativas;
@@ -241,7 +242,7 @@ void setup() {
       xTaskCreatePinnedToCore(
         sdManagerTask,  
         "SD_Manager",      
-        8192,             
+        32768,             
         NULL,             
         1,                
         NULL,  
@@ -250,7 +251,10 @@ void setup() {
     }
   }
   Serial.println("Versão sem pré-alocação e com código de erro");
-  Serial.println("=== Setup concluido ==="); 
+  if (sdOk)
+    Serial.println("=== Setup concluido ===");
+  else
+    Serial.println("=== Setup cancelado ==="); 
 }
 
 // O LOOP APENAS PRODUZ DADOS PARA A RAM
@@ -436,6 +440,7 @@ void sdManagerTask(void *pvParameters) {
         // falhasConsecutivas++;
         Serial.printf("-> [ERRO] Falha ao gravar audio no arquivo WAV.\n");
         Serial.printf("Erro 0x%02X e Data 0x%02X\n", SD.sdErrorCode(), SD.sdErrorData());
+        falhas++;
         if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){
           sdOk = false;
         }
@@ -466,6 +471,7 @@ void sdManagerTask(void *pvParameters) {
         } else {
           Serial.println("-> [ERRO] O SD falhou na gravacao do CSV.");
           Serial.printf("Erro 0x%02X e Data 0x%02X\n", SD.sdErrorCode(), SD.sdErrorData());
+          falhas++;
           if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){
             sdOk = false;
           }
