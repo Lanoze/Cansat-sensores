@@ -24,7 +24,7 @@ SPIClass sd_spi(VSPI);
 SdFs SD;
 
 const uint8_t velocidades[] = {16, 4, 2, 1};
-const int LINHAS = 100; // 400 linhas para garantir que ultrapassa o gargalo das 322
+const int LINHAS = 900; // 3 minutos
 
 void infoCartao() {
   uint8_t tipo = SD.fatType();
