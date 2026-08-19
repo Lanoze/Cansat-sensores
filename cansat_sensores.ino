@@ -26,6 +26,8 @@
 #define I2S_SD_PIN  22  
 #define I2S_SCK_PIN 21
 #define BUFFER_CSV 2048*8
+#define SPI_FREQ_MHz 16
+#define MAX_TENTATIVAS 20
 
 #define SEALEVEL_HPA 1013.25 
 
@@ -204,7 +206,7 @@ void setup() {
   } else {
     Serial.println("INMP441: FALHA (Desconectado ou sem sinal)");
   }
-  if(!montar_SD(20, 1)){ 
+  if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){ 
     Serial.println("Falha na montagem inicial do SD");
     falha_inicial_SD = true;
     sdOk = false;
@@ -434,7 +436,7 @@ void sdManagerTask(void *pvParameters) {
         // falhasConsecutivas++;
         Serial.printf("-> [ERRO] Falha ao gravar audio no arquivo WAV.\n");
         Serial.printf("Erro 0x%02X e Data 0x%02X\n", SD.sdErrorCode(), SD.sdErrorData());
-        if(!montar_SD(20, 1)){
+        if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){
           sdOk = false;
         }
       }
@@ -464,7 +466,7 @@ void sdManagerTask(void *pvParameters) {
         } else {
           Serial.println("-> [ERRO] O SD falhou na gravacao do CSV.");
           Serial.printf("Erro 0x%02X e Data 0x%02X\n", SD.sdErrorCode(), SD.sdErrorData());
-          if(!montar_SD(20, 1)){
+          if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){
             sdOk = false;
           }
           // falhasConsecutivas++;
