@@ -20,6 +20,8 @@
 #define SD_MOSI  26
 #define SD_CS    25
 
+uint8_t code;
+
 SPIClass sd_spi(VSPI);
 SdFs SD;
 
@@ -48,6 +50,11 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   while(!SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(mhz), &sd_spi)) && tentativas < maximo_tentativas) {
     Serial.printf("[X] Nem montou. err=0x%02X data=0x%02X\n",
                   SD.sdErrorCode(), SD.sdErrorData());
+    code = SD.sdErrorCode();
+    printSdErrorSymbol(&Serial, code);
+    Serial.print(" - ");
+    printSdErrorText(&Serial, code);
+    Serial.println();
     tentativas++;
     delay(500);
   }
@@ -83,6 +90,11 @@ void testa(uint8_t mhz) {
   if (!f) {
     Serial.printf("[X] Nao abriu %s. err=0x%02X data=0x%02X\n",
                   nome, SD.sdErrorCode(), SD.sdErrorData());
+    code = SD.sdErrorCode();
+    printSdErrorSymbol(&Serial, code);
+    Serial.print(" - ");
+    printSdErrorText(&Serial, code);
+    Serial.println();
     SD.end();
     return;
   }
@@ -119,6 +131,11 @@ void testa(uint8_t mhz) {
       falhas++;
       if(primeiraFalha == -1) primeiraFalha = i;
       Serial.printf("[Erro no meio da operação]. err=0x%02X data=0x%02X\n", SD.sdErrorCode(), SD.sdErrorData());
+      code = SD.sdErrorCode();
+      printSdErrorSymbol(&Serial, code);
+      Serial.print(" - ");
+      printSdErrorText(&Serial, code);
+      Serial.println();
       if(!montar_SD(8, mhz)){
         Serial.println("Indo para a próxima frequência 2...");
         return;
