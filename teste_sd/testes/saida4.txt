@@ -1,0 +1,37 @@
+
+
+### TESTE ISOLADO DO SD ###
+Pinos: SCK=14 MISO=27 MOSI=26 CS=25
+
+========== TESTE A 16 MHz ==========
+[X] Nem montou. err=0x17 data=0xFF
+[X] Nem montou. err=0x17 data=0xFF
+[X] Nem montou. err=0x17 data=0xFF
+[X] Nem montou. err=0x17 data=0xFF
+Formato: exFAT
+Livre: 63794 MB | Cluster: 128 KB
+-> RESULTADO 16 MHz: 900 ok / 0 falhas | write+sync medio 0 ms, pior 5 ms
+
+========== TESTE A 4 MHz ==========
+-> RESULTADO 4 MHz: 900 ok / 0 falhas | write+sync medio 0 ms, pior 11 ms
+
+========== TESTE A 2 MHz ==========
+  FALHA na linha 19 -> err=0x0A data=0xFF
+  FALHA na linha 20 -> err=0x0D data=0xFF
+  FALHA na linha 21 -> err=0x0D data=0xFF
+  FALHA na linha 22 -> err=0x0D data=0xFF
+  FALHA na linha 23 -> err=0x0D data=0xFF
+  (5 falhas, abortando esta velocidade)
+-> RESULTADO 2 MHz: 18 ok / 5 falhas | 1a falha na linha 19 | write+sync medio 0 ms, pior 8 ms
+
+========== TESTE A 1 MHz ==========
+[X] Nem montou. err=0x17 data=0xFF
+  FALHA na linha 50 -> err=0x24 data=0x05
+  FALHA na linha 51 -> err=0x0D data=0x05
+  FALHA na linha 52 -> err=0x0D data=0x05
+  FALHA na linha 53 -> err=0x0D data=0x05
+  FALHA na linha 54 -> err=0x0D data=0x05
+  (5 falhas, abortando esta velocidade)
+-> RESULTADO 1 MHz: 49 ok / 5 falhas | 1a falha na linha 50 | write+sync medio 34 ms, pior 619 ms
+
+### FIM. Compare os resultados acima. ###

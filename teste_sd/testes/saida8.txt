@@ -1,0 +1,91 @@
+
+
+### TESTE ISOLADO DO SD ###
+Pinos: SCK=14 MISO=27 MOSI=26 CS=25
+
+========== TESTE A 16 MHz ==========
+Formato: FAT32
+Livre: 63782 MB | Cluster: 32 KB
+A falha ocorreu na escrita
+[Erro no meio da operação]. err=0x24 data=0x05
+SD_CARD_ERROR_WRITE_PROGRAMMING - Flash programming
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+O cartão não se recuperou
+Indo para a próxima frequência 2...
+
+========== TESTE A 4 MHz ==========
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+O cartão não se recuperou
+Indo para a próxima frequência...
+
+========== TESTE A 2 MHz ==========
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+O cartão não se recuperou
+Indo para a próxima frequência...
+
+========== TESTE A 1 MHz ==========
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+[X] Nem montou. err=0x01 data=0x00
+SD_CARD_ERROR_CMD0 - Card reset failed
+O cartão não se recuperou
+Indo para a próxima frequência...
+
+### FIM. Compare os resultados acima. ###
