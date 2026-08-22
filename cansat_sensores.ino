@@ -138,7 +138,7 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
     Serial.printf("[X] Nem montou. err=0x%02X data=0x%02X",
                   SD.sdErrorCode(), SD.sdErrorData());
     tentativas++;
-    Serial.printf( "(tentativa %u/%u)\n", tentativas, MAX_TENTATIVAS);
+    Serial.printf( "(tentativa %u/%u)\n", tentativas, maximo_tentativas);
     delay(500);
   }
   falhas += tentativas;
