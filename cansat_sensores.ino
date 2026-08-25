@@ -488,10 +488,16 @@ void sdManagerTask(void *pvParameters) {
       if (sdOk) {
         if (audioFile) {
           atualizarCabecalhoWAV(audioFile);
-          audioFile.sync();
+          if(!audioFile.sync())
+            Serial.println("Falha ao sincronizar o áudio com o cartão");
+          else
+            Serial.println("Áudio sincronizado com sucesso");
         }
         if (csvFile) {
-          csvFile.sync();
+          if(!csvFile.sync())
+            Serial.println("Falha ao sincronizar o lote CSV com o cartão");
+          else
+            Serial.println("Lote CSV sincronizado com sucesso");
         }
       }
       ultimoSync = millis();
