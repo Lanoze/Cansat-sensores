@@ -122,9 +122,17 @@ void atualizarCabecalhoWAV(FsFile &arquivo) {
   header[43] = (byte)((tamanhoDadosAudio >> 24) & 0xFF);
 
   uint32_t posicaoAtual = arquivo.position();
-  arquivo.seek(0);
-  arquivo.write(header, 44);
-  arquivo.seek(posicaoAtual);
+  if (!arquivo.seek(0)) {
+    Serial.println("Falha ao posicionar no início do WAV para atualizar cabeçalho");
+    return;
+  }
+  if (arquivo.write(header, 44) != 44) {
+    Serial.println("Falha ao escrever cabeçalho WAV no cartão");
+    return;
+  }
+  if (!arquivo.seek(posicaoAtual)) {
+    Serial.println("Falha ao restaurar posição do arquivo WAV");
+  }
 }
 
 bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
