@@ -7,8 +7,8 @@
 
 // Pinos do modulo SD (VSPI padrao da ESP32 DevKit V1)[cite: 3]
 #define SD_SCK   14 //[cite: 3]
-#define SD_MISO  27 //[cite: 3]
-#define SD_MOSI  26 //[cite: 3]
+#define SD_MISO  26 //[cite: 3]
+#define SD_MOSI  27 //[cite: 3]
 #define SD_CS    25 //[cite: 3]
 
 // Ajustamos o tipo FS para SdFs (classe da SdFat para exFAT/FAT32)
