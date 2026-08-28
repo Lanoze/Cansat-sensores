@@ -223,10 +223,10 @@ void setup() {
   }
 
   if (sdOk) {
-    bool csvExiste = SD.exists(LOG_FILE);
+    bool csvExistia = SD.exists(LOG_FILE);
 
     csvFile = SD.open(LOG_FILE, O_WRITE | O_CREAT | O_APPEND);
-    if (!csvExiste && csvFile) {
+    if (!csvExistia && csvFile) { //Só adiciona a linha inicial se não tinha um CSV antes
       csvFile.print("Pacote,Tempo_ms,AccX,AccY,AccZ,GyroX,GyroY,GyroZ,Temp_MPU(C),Temp_BMP(C),Pressao(hPa),Altitude(m),Temp_SHT(C),Umidade_SHT(%),Temp_DS18B20(C)\r\n");
       csvFile.sync();
     }
