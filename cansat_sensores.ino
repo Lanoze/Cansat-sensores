@@ -140,7 +140,7 @@ void atualizarCabecalhoWAV(FsFile &arquivo) {
   }
 }
 
-//A parte de salvar erro dessa função é meio inútil, pois não tem como salvar se não tiver cartão detectado
+//Erros de montagem ficam no buffer pré-SD e são despejados quando o cartão monta
 bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   uint8_t tentativas = 0;
   // Reinicia o barramento SPI fisicamente a cada teste para o SD aceitar a nova frequência
@@ -159,13 +159,16 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   Serial.print("Número de falhas: ");
   Serial.println(falhas);
   if (tentativas == maximo_tentativas){
-    salvar_erro("O cartão SD não se recuperou após %u tentativas\n", (unsigned)tentativas);
+    salvar_erro("O cartão SD não se recuperou após %u tentativas", (unsigned)tentativas);
     return false;
   }
   if(tentativas > 0)
-    salvar_erro("O cartão se recuperou na tentativa %u\n", (unsigned)tentativas);
+    salvar_erro("O cartão se recuperou na tentativa %u", (unsigned)tentativas);
   return true;
 }
+
+#define BUFFER_ERROS_PRE_SD 1024
+char erroBufferPreSD[BUFFER_ERROS_PRE_SD] = "";
 
 void salvar_erro(const char* formato, ...) {
   char msg[256];
@@ -174,14 +177,30 @@ void salvar_erro(const char* formato, ...) {
   vsnprintf(msg, sizeof(msg), formato, args);
   va_end(args);
 
+  char linha[320];
+  snprintf(linha, sizeof(linha), "[%lu ms] %s\n", millis(), msg);
+
   if (xSemaphoreTake(erroMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
     if (errorFile) {
-      errorFile.printf("[%lu ms] %s\n", millis(), msg);
+      errorFile.print(linha);
       errorFile.sync();
+    } else if (strlen(erroBufferPreSD) + strlen(linha) < sizeof(erroBufferPreSD)) {
+      strcat(erroBufferPreSD, linha);
     }
     xSemaphoreGive(erroMutex);
   }
-  Serial.printf("[%lu ms] %s\n", millis(), msg);
+  Serial.print(linha);
+}
+
+void esvaziarBufferErrosPreSD() {
+  if (!errorFile || erroBufferPreSD[0] == '\0') return;
+
+  if (xSemaphoreTake(erroMutex, pdMS_TO_TICKS(20)) == pdTRUE) {
+    errorFile.print(erroBufferPreSD);
+    erroBufferPreSD[0] = '\0';
+    errorFile.sync();
+    xSemaphoreGive(erroMutex);
+  }
 }
 
 void setup() {
@@ -202,6 +221,7 @@ void setup() {
     mpuOk = true;
     Serial.println("OK"); 
   } else {
+    salvar_erro("Sensor MPU6050 falhou na inicialização");
     Serial.println("FALHOU");
   }
 
@@ -211,6 +231,7 @@ void setup() {
     bmpOk = true;
     Serial.println("OK"); 
   } else {
+    salvar_erro("Sensor BMP280 falhou na inicialização");
     Serial.println("FALHOU");
   }
 
@@ -219,6 +240,7 @@ void setup() {
     shtOk = true;
     Serial.println("OK"); 
   } else {
+    salvar_erro("Sensor SHT30 falhou na inicialização");
     Serial.println("FALHOU");
   }
 
@@ -228,6 +250,7 @@ void setup() {
     dsOk = true;
     Serial.println("OK");
   } else {
+    salvar_erro("Sensor DS18B20 falhou na inicialização");
     Serial.println("FALHOU");
   }
 
@@ -237,6 +260,7 @@ void setup() {
   if (micOk) {
     Serial.println("INMP441: OK (Sinal 32-bit detectado)");
   } else {
+    salvar_erro("Microfone INMP441 sem sinal na inicialização");
     Serial.println("INMP441: FALHA (Desconectado ou sem sinal)");
   }
   if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){ 
@@ -249,36 +273,11 @@ void setup() {
     errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_TRUNC);
     if (errorFile) {
       errorFile.printf("Inicializando \"erros.txt\" em %lu ms\n\n", millis());
-      if(falhas > 0)
-        salvar_erro("O cartão se recuperou na tentativa %u\n", (unsigned)falhas);
-      if(!mpuOk){
-        //falhas++;
-        salvar_erro("O MPU6050 falhou\n");
-      }
-      if(!bmpOk){
-        //falhas++;
-        salvar_erro("O BMP280 falhou\n");
-      }
-      if(!shtOk){
-        //falhas++;
-        salvar_erro("O SHT30 falhou\n");
-      }
-      if(!dsOk){
-        //falhas++;
-        salvar_erro("O DS18B20 falhou\n");
-      }
-      if(!micOk){
-        //falhas++;
-        salvar_erro("O microfone falhou\n");
-      }
       errorFile.sync();
     }
 
-    if (!mpuOk) salvar_erro("MPU6050 não respondeu na inicialização");
-    if (!bmpOk) salvar_erro("BMP280 não respondeu na inicialização");
-    if (!shtOk) salvar_erro("SHT30 não respondeu na inicialização");
-    if (!dsOk)  salvar_erro("DS18B20 não respondeu na inicialização");
-    if (!micOk) salvar_erro("Microfone INMP441 sem sinal na inicialização");
+    // Despeja no arquivo os erros que ocorreram antes do SD estar pronto
+    esvaziarBufferErrosPreSD();
 
     bool csvExistia = SD.exists(LOG_FILE);
 
