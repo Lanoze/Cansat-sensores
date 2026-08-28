@@ -491,8 +491,8 @@ void sdManagerTask(void *pvParameters) {
       ultimoWriteCSV = millis();
     }
 
-    // 3. SINCRONIZADOR UNIFICADO (A cada 10s, consolida áudio e CSV de forma simultânea)
-    if (millis() - ultimoSync >= 10000) {
+    // 3. SINCRONIZADOR UNIFICADO (A cada 3s, consolida áudio e CSV de forma simultânea)
+    if (millis() - ultimoSync >= 3000) {
       if (sdOk) {
         if (audioFile) {
           atualizarCabecalhoWAV(audioFile);
