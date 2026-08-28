@@ -180,7 +180,7 @@ void salvar_erro(const char* formato, ...) {
     }
     xSemaphoreGive(erroMutex);
   }
-  Serial.println(msg);
+  Serial.printf("[%lu ms] %s\n", millis(), msg);
 }
 
 void setup() {
