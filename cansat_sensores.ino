@@ -162,8 +162,30 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
     salvar_erro("O cartão SD não se recuperou após %u tentativas", (unsigned)tentativas);
     return false;
   }
+
+  // Reabre o arquivo de erros em modo append para garantir escrita e despejar buffer
+  if (errorFile) errorFile.close();
+  errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_APPEND);
+
   if(tentativas > 0)
     salvar_erro("O cartão se recuperou na tentativa %u", (unsigned)tentativas);
+
+  // Despeja o buffer acumulado durante as tentativas offline
+  esvaziarBufferErrosPreSD();
+
+  // Reabre os arquivos de dados para evitar handles obsoletos (stale handles)
+  if (csvFile) csvFile.close();
+  csvFile = SD.open(LOG_FILE, O_WRITE | O_CREAT | O_APPEND);
+
+  if (audioFile) {
+    audioFile.close();
+    audioFile = SD.open(AUDIO_FILE, O_WRITE | O_CREAT | O_APPEND);
+    if (audioFile) {
+      tamanhoDadosAudio = audioFile.size() >= 44 ? audioFile.size() - 44 : 0;
+      atualizarCabecalhoWAV(audioFile);
+    }
+  }
+
   return true;
 }
 
@@ -181,11 +203,17 @@ void salvar_erro(const char* formato, ...) {
   snprintf(linha, sizeof(linha), "[%lu ms] %s\n", millis(), msg);
 
   if (xSemaphoreTake(erroMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+    bool escrito = false;
     if (errorFile) {
-      errorFile.print(linha);
-      errorFile.sync();
-    } else if (strlen(erroBufferPreSD) + strlen(linha) < sizeof(erroBufferPreSD)) {
-      strcat(erroBufferPreSD, linha);
+      if (errorFile.print(linha)) {
+        errorFile.sync();
+        escrito = true;
+      }
+    }
+    if (!escrito) {
+      if (strlen(erroBufferPreSD) + strlen(linha) < sizeof(erroBufferPreSD)) {
+        strcat(erroBufferPreSD, linha);
+      }
     }
     xSemaphoreGive(erroMutex);
   }
