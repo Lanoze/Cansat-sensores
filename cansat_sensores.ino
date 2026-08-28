@@ -48,7 +48,8 @@ SemaphoreHandle_t ramMutex;
 
 // Arquivos mantidos abertos globalmente
 FsFile audioFile;
-FsFile csvFile; 
+FsFile csvFile;
+FsFile errorFile;
 
 char csvBuffer[BUFFER_CSV] = ""; //Onde os dados CSV são guardadados antes de serem enviados ao cartão SD
 
@@ -60,6 +61,7 @@ bool sdOk  = true;
 
 const char* LOG_FILE = "/data.csv"; 
 const char* AUDIO_FILE = "/voo.wav";
+const char* ERROR_FILE = "/erros.txt";
 
 uint32_t pacoteId = 1; 
 
@@ -170,6 +172,7 @@ void setup() {
   Wire.begin(SDA_PIN, SCL_PIN); 
   
   csvBuffer[0] = '\0';
+  errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_TRUNC);
 
   // ----- INICIALIZAÇÃO DOS SENSORES -----
   Serial.print("MPU6050: ");
