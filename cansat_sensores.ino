@@ -163,6 +163,9 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   return true;
 }
 
+void salvar_erro(const char* mensagem_erro){
+  errorFile.printf("Erro ocorrido em %lu ms: %s\n", millis(), mensagem_erro);
+}
 
 void setup() {
   Serial.begin(115200);
@@ -173,6 +176,7 @@ void setup() {
   
   csvBuffer[0] = '\0';
   errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_TRUNC);
+  errorFile.printf("Inicializando \"erros.txt\" em %lu ms\n\n",millis());
 
   // ----- INICIALIZAÇÃO DOS SENSORES -----
   Serial.print("MPU6050: ");
