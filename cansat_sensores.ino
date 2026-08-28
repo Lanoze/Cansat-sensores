@@ -14,6 +14,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <driver/i2s.h>
+#include <stdarg.h>
 #include "sd_read_write.h"
 
 // ---------- PINOS (I2C / OneWire) ----------
@@ -44,7 +45,8 @@ DallasTemperature ds18b20(&oneWire);
 // ---------- SD E GESTÃO DE MEMÓRIA RAM ----------
 SPIClass sd_spi(VSPI); 
 SdFs SD;               
-SemaphoreHandle_t ramMutex; 
+SemaphoreHandle_t ramMutex;
+SemaphoreHandle_t erroMutex; 
 
 // Arquivos mantidos abertos globalmente
 FsFile audioFile;
@@ -58,6 +60,7 @@ bool bmpOk = false;
 bool shtOk = false;
 bool dsOk  = false;
 bool sdOk  = true;
+bool micOk = false;
 
 const char* LOG_FILE = "/data.csv"; 
 const char* AUDIO_FILE = "/voo.wav";
@@ -125,15 +128,15 @@ void atualizarCabecalhoWAV(FsFile &arquivo) {
 
   uint32_t posicaoAtual = arquivo.position();
   if (!arquivo.seek(0)) {
-    Serial.println("Falha ao posicionar no início do WAV para atualizar cabeçalho");
+    salvar_erro("Falha ao posicionar no início do WAV para atualizar o cabeçalho");
     return;
   }
   if (arquivo.write(header, 44) != 44) {
-    Serial.println("Falha ao escrever cabeçalho WAV no cartão");
+    salvar_erro("Falha ao escrever o cabeçalho WAV no cartão");
     return;
   }
   if (!arquivo.seek(posicaoAtual)) {
-    Serial.println("Falha ao restaurar posição do arquivo WAV");
+    salvar_erro("Falha ao restaurar a posição do arquivo WAV");
   }
 }
 
@@ -145,17 +148,17 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
 
   Serial.printf("Tentando (re)iniciar o cartão a %u MHz\n", mhz);
   while(!SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SD_SCK_MHZ(mhz), &sd_spi)) && tentativas < maximo_tentativas) {
-    Serial.printf("[X] Nem montou. err=0x%02X data=0x%02X",
-                  SD.sdErrorCode(), SD.sdErrorData());
     tentativas++;
-    Serial.printf( "(tentativa %u/%u)\n", tentativas, maximo_tentativas);
+    salvar_erro("Falha ao montar o cartão SD - err=0x%02X data=0x%02X (tentativa %u/%u)",
+                (unsigned)SD.sdErrorCode(), (unsigned)SD.sdErrorData(),
+                (unsigned)tentativas, (unsigned)maximo_tentativas);
     delay(500);
   }
   falhas += tentativas;
   Serial.print("Número de falhas: ");
   Serial.println(falhas);
   if (tentativas == maximo_tentativas){
-    Serial.println("O cartão não se recuperou");
+    salvar_erro("O cartão SD não se recuperou após %u tentativas", (unsigned)tentativas);
     return false;
   }
   if(tentativas > 0)
@@ -163,20 +166,31 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   return true;
 }
 
-void salvar_erro(const char* mensagem_erro){
-  errorFile.printf("Erro ocorrido em %lu ms: %s\n", millis(), mensagem_erro);
+void salvar_erro(const char* formato, ...) {
+  char msg[256];
+  va_list args;
+  va_start(args, formato);
+  vsnprintf(msg, sizeof(msg), formato, args);
+  va_end(args);
+
+  if (xSemaphoreTake(erroMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+    if (errorFile) {
+      errorFile.printf("[%lu ms] %s\n", millis(), msg);
+      errorFile.sync();
+    }
+    xSemaphoreGive(erroMutex);
+  }
+  Serial.println(msg);
 }
 
 void setup() {
   Serial.begin(115200);
   delay(1500); 
 
-  ramMutex = xSemaphoreCreateMutex();
-  Wire.begin(SDA_PIN, SCL_PIN); 
-  
+ramMutex = xSemaphoreCreateMutex();
+  erroMutex = xSemaphoreCreateMutex();
+  Wire.begin(SDA_PIN, SCL_PIN);
   csvBuffer[0] = '\0';
-  errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_TRUNC);
-  errorFile.printf("Inicializando \"erros.txt\" em %lu ms\n\n",millis());
 
   // ----- INICIALIZAÇÃO DOS SENSORES -----
   Serial.print("MPU6050: ");
@@ -218,18 +232,30 @@ void setup() {
 
   // ----- INICIALIZAÇÃO I2S E SD -----
   i2sInit();
-  if (verificaMicrofoneINMP441()) {
+  micOk = verificaMicrofoneINMP441();
+  if (micOk) {
     Serial.println("INMP441: OK (Sinal 32-bit detectado)");
   } else {
     Serial.println("INMP441: FALHA (Desconectado ou sem sinal)");
   }
   if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){ 
-    Serial.println("Falha na montagem inicial do SD");
+    salvar_erro("Falha na montagem inicial do cartão SD");
     falha_inicial_SD = true;
     sdOk = false;
   }
 
   if (sdOk) {
+    errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_TRUNC);
+    if (errorFile) {
+      errorFile.printf("Inicializando \"erros.txt\" em %lu ms\n\n", millis());
+    }
+
+    if (!mpuOk) salvar_erro("MPU6050 não respondeu na inicialização");
+    if (!bmpOk) salvar_erro("BMP280 não respondeu na inicialização");
+    if (!shtOk) salvar_erro("SHT30 não respondeu na inicialização");
+    if (!dsOk)  salvar_erro("DS18B20 não respondeu na inicialização");
+    if (!micOk) salvar_erro("Microfone INMP441 sem sinal na inicialização");
+
     bool csvExistia = SD.exists(LOG_FILE);
 
     csvFile = SD.open(LOG_FILE, O_WRITE | O_CREAT | O_APPEND);
@@ -240,7 +266,7 @@ void setup() {
 
     if (SD.exists(AUDIO_FILE)) {
       if (!SD.remove(AUDIO_FILE)) {
-        Serial.println("-> [AVISO] Nao foi possivel deletar o WAV antigo.");
+        salvar_erro("Não foi possível deletar o arquivo WAV antigo (/voo.wav)");
       }
       delay(50); 
     }
@@ -251,7 +277,7 @@ void setup() {
     }
 
     if (!audioFile || !csvFile) {
-      Serial.println("-> [ERRO CRITICO] Falha ao abrir os arquivos no SD.");
+      salvar_erro("Falha ao abrir os arquivos de registro (CSV/WAV) no cartão SD");
     } else {
       Serial.println("-> Arquivos abertos! Iniciando Core 0.");
 
@@ -402,7 +428,7 @@ void enviaParaRAM(float accX, float accY, float accZ, float gyroX, float gyroY, 
     if (strlen(csvBuffer) + strlen(linha) < sizeof(csvBuffer)) {
       strcat(csvBuffer, linha);
     } else {
-      Serial.println("-> [ALERTA] RAM estourada! O Lote era grande demais e algumas linhas foram perdidas.");
+      salvar_erro("RAM estourada: o lote era grande demais e algumas linhas de dados foram perdidas");
     }
     xSemaphoreGive(ramMutex);
   }
@@ -453,9 +479,8 @@ void sdManagerTask(void *pvParameters) {
         // falhasConsecutivas = 0;
         tamanhoDadosAudio += bytesEscritos;
       } else {
-        // falhasConsecutivas++;
-        Serial.printf("-> [ERRO] Falha ao gravar audio no arquivo WAV.\n");
-        Serial.printf("Erro 0x%02X e Data 0x%02X\n", SD.sdErrorCode(), SD.sdErrorData());
+        salvar_erro("Falha ao gravar áudio no arquivo WAV - err=0x%02X data=0x%02X",
+                    (unsigned)SD.sdErrorCode(), (unsigned)SD.sdErrorData());
         falhas++;
         if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){
           sdOk = false;
@@ -485,8 +510,8 @@ void sdManagerTask(void *pvParameters) {
             Serial.println(escr);
           }
         } else {
-          Serial.println("-> [ERRO] O SD falhou na gravacao do CSV.");
-          Serial.printf("Erro 0x%02X e Data 0x%02X\n", SD.sdErrorCode(), SD.sdErrorData());
+          salvar_erro("O SD falhou na gravação do lote CSV - err=0x%02X data=0x%02X",
+                      (unsigned)SD.sdErrorCode(), (unsigned)SD.sdErrorData());
           falhas++;
           if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){
             sdOk = false;
@@ -504,13 +529,13 @@ void sdManagerTask(void *pvParameters) {
         if (audioFile) {
           atualizarCabecalhoWAV(audioFile);
           if(!audioFile.sync())
-            Serial.println("Falha ao sincronizar o áudio com o cartão");
+            salvar_erro("Falha ao sincronizar o áudio com o cartão");
           else
             Serial.println("Áudio sincronizado com sucesso");
         }
         if (csvFile) {
           if(!csvFile.sync())
-            Serial.println("Falha ao sincronizar o lote CSV com o cartão");
+            salvar_erro("Falha ao sincronizar o lote CSV com o cartão");
           else
             Serial.println("Lote CSV sincronizado com sucesso");
         }
