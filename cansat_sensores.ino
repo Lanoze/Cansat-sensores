@@ -188,7 +188,7 @@ void setup() {
   Serial.begin(115200);
   delay(1500); 
 
-ramMutex = xSemaphoreCreateMutex();
+  ramMutex = xSemaphoreCreateMutex();
   erroMutex = xSemaphoreCreateMutex();
   Wire.begin(SDA_PIN, SCL_PIN);
   csvBuffer[0] = '\0';
