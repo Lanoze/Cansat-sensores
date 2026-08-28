@@ -140,6 +140,7 @@ void atualizarCabecalhoWAV(FsFile &arquivo) {
   }
 }
 
+//A parte de salvar erro dessa função é meio inútil, pois não tem como salvar se não tiver cartão detectado
 bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   uint8_t tentativas = 0;
   // Reinicia o barramento SPI fisicamente a cada teste para o SD aceitar a nova frequência
@@ -158,11 +159,11 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   Serial.print("Número de falhas: ");
   Serial.println(falhas);
   if (tentativas == maximo_tentativas){
-    salvar_erro("O cartão SD não se recuperou após %u tentativas", (unsigned)tentativas);
+    salvar_erro("O cartão SD não se recuperou após %u tentativas\n", (unsigned)tentativas);
     return false;
   }
   if(tentativas > 0)
-    Serial.printf("O cartão se recuperou na tentativa %u\n", tentativas);
+    salvar_erro("O cartão se recuperou na tentativa %u\n", (unsigned)tentativas);
   return true;
 }
 
