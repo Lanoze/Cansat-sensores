@@ -248,6 +248,7 @@ ramMutex = xSemaphoreCreateMutex();
     errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_TRUNC);
     if (errorFile) {
       errorFile.printf("Inicializando \"erros.txt\" em %lu ms\n\n", millis());
+      errorFile.sync();
     }
 
     if (!mpuOk) salvar_erro("MPU6050 não respondeu na inicialização");
