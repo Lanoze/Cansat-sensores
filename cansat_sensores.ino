@@ -249,6 +249,28 @@ void setup() {
     errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_TRUNC);
     if (errorFile) {
       errorFile.printf("Inicializando \"erros.txt\" em %lu ms\n\n", millis());
+      if(falhas > 0)
+        salvar_erro("O cartão se recuperou na tentativa %u\n", (unsigned)falhas);
+      if(!mpuOk){
+        //falhas++;
+        salvar_erro("O MPU6050 falhou\n");
+      }
+      if(!bmpOk){
+        //falhas++;
+        salvar_erro("O BMP280 falhou\n");
+      }
+      if(!shtOk){
+        //falhas++;
+        salvar_erro("O SHT30 falhou\n");
+      }
+      if(!dsOk){
+        //falhas++;
+        salvar_erro("O DS18B20 falhou\n");
+      }
+      if(!micOk){
+        //falhas++;
+        salvar_erro("O microfone falhou\n");
+      }
       errorFile.sync();
     }
 
