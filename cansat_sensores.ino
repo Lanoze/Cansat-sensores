@@ -378,14 +378,6 @@ void setup() {
     // Despeja no arquivo os erros que ocorreram antes do SD estar pronto
     esvaziarBufferErrosPreSD();
 
-    // Apaga o CSV anterior para garantir o cabeçalho sempre na primeira linha (mesma política do WAV)
-    if (SD.exists(LOG_FILE)) {
-      if (!SD.remove(LOG_FILE)) {
-        salvar_erro("Não foi possível deletar o CSV antigo (/data.csv)");
-      }
-      delay(50);
-    }
-
     csvFile = SD.open(LOG_FILE, O_WRITE | O_CREAT | O_APPEND);
     escreverCabecalhoCSV(); //Só adiciona o cabeçalho se o CSV for novo (vazio)
 
