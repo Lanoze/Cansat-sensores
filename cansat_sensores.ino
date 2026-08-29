@@ -142,12 +142,13 @@ void atualizarCabecalhoWAV(FsFile &arquivo) {
   uint32_t posicaoAtual = arquivo.position();
   if (!arquivo.seek(0)) {
     salvar_erro("Falha ao posicionar no início do WAV para atualizar o cabeçalho");
-    return;
+    return; // Posição original ainda é válida, seguro retornar
   }
-  if (arquivo.write(header, 44) != 44) {
+  bool escreveu = (arquivo.write(header, 44) == 44);
+  if (!escreveu) {
     salvar_erro("Falha ao escrever o cabeçalho WAV no cartão");
-    return;
   }
+  // SEMPRE restaurar a posição — nunca retornar antes disso
   if (!arquivo.seek(posicaoAtual)) {
     salvar_erro("Falha ao restaurar posição — usando fim do arquivo");
     if (!arquivo.seek(arquivo.size())) {
