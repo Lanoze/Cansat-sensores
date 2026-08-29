@@ -186,6 +186,12 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   if (errorFile) errorFile.close();
   errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_APPEND);
 
+  // Cabeçalho: só escreve se o arquivo for novo (primeira linha sempre será a inicialização)
+  if (errorFile && errorFile.size() == 0) {
+    errorFile.printf("Inicializando \"erros.txt\" em %lu ms\n\n", millis());
+    errorFile.sync();
+  }
+
   // Despeja o buffer acumulado durante as tentativas offline ANTES da msg de recuperação
   esvaziarBufferErrosPreSD();
 
@@ -480,10 +486,6 @@ void setup() {
 
   if (sdOk) {
     errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_APPEND);
-    if (errorFile && errorFile.size() == 0) {
-      errorFile.printf("Inicializando \"erros.txt\" em %lu ms\n\n", millis());
-      errorFile.sync();
-    }
 
     // Despeja no arquivo os erros que ocorreram antes do SD estar pronto
     esvaziarBufferErrosPreSD();
