@@ -149,7 +149,10 @@ void atualizarCabecalhoWAV(FsFile &arquivo) {
     return;
   }
   if (!arquivo.seek(posicaoAtual)) {
-    salvar_erro("Falha ao restaurar a posição do arquivo WAV");
+    salvar_erro("Falha ao restaurar posição — usando fim do arquivo");
+    if (!arquivo.seek(arquivo.size())) {
+      salvar_erro("Falha ao posicionar no fim do WAV");
+    }
   }
 }
 
