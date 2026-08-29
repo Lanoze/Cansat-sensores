@@ -186,11 +186,11 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   if (errorFile) errorFile.close();
   errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_APPEND);
 
+  // Despeja o buffer acumulado durante as tentativas offline ANTES da msg de recuperação
+  esvaziarBufferErrosPreSD();
+
   if(tentativas > 0)
     salvar_erro("O cartão se recuperou na tentativa %u", (unsigned)tentativas);
-
-  // Despeja o buffer acumulado durante as tentativas offline
-  esvaziarBufferErrosPreSD();
 
   // Reabre os arquivos de dados para evitar handles obsoletos (stale handles)
   if (csvFile) csvFile.close();
@@ -476,8 +476,8 @@ void setup() {
   }
 
   if (sdOk) {
-    errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_TRUNC);
-    if (errorFile) {
+    errorFile = SD.open(ERROR_FILE, O_WRITE | O_CREAT | O_APPEND);
+    if (errorFile && errorFile.size() == 0) {
       errorFile.printf("Inicializando \"erros.txt\" em %lu ms\n\n", millis());
       errorFile.sync();
     }
