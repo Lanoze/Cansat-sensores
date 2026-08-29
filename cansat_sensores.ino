@@ -80,6 +80,7 @@ const int SAMPLE_RATE = 16000;
 const int altitudeReadQuantity = 5; // Leituras para a altitude inicial
 float initialAltitude = 0;          // Offset de altitude medido no solo
 float accelBiasX = 0, accelBiasY = 0, accelBiasZ = 0;
+float accelScale = 1.0f;
 float gyroBiasX = 0, gyroBiasY = 0, gyroBiasZ = 0;
 
 // Protótipos
@@ -249,37 +250,92 @@ void esvaziarBufferErrosPreSD() {
 }
 
 // =====================
-// CALIBRAÇÃO (espelhando a aviônica)
+// CALIBRAÇÃO ROBUSTA À ORIENTAÇÃO + VALIDAÇÃO
 // =====================
 void calibrarMPU() {
   Serial.println("Calibrando MPU6050...");
-  Serial.println("Mantenha a placa nivelada e parada por 5 segundos.");
+  Serial.println("Mantenha a placa estatica por 5 segundos.");
   delay(5000);
 
+  // ---- A. Calibração robusta à orientação ----
   const int amostras = 100;
   sensors_event_t a, g, temp;
   double somaAx = 0, somaAy = 0, somaAz = 0;
   double somaGx = 0, somaGy = 0, somaGz = 0;
-  int lidas = 0;
 
   for (int i = 0; i < amostras; i++) {
     mpu.getEvent(&a, &g, &temp);
     somaAx += a.acceleration.x; somaAy += a.acceleration.y; somaAz += a.acceleration.z;
     somaGx += g.gyro.x;         somaGy += g.gyro.y;         somaGz += g.gyro.z;
-    lidas++;
     delay(10);
   }
 
-  accelBiasX = (float)(somaAx / lidas);
-  accelBiasY = (float)(somaAy / lidas);
-  accelBiasZ = (float)(somaAz / lidas) - 9.80665f; // remove a gravidade (placa nivelada, Z p/ cima)
-  gyroBiasX = (float)(somaGx / lidas);
-  gyroBiasY = (float)(somaGy / lidas);
-  gyroBiasZ = (float)(somaGz / lidas);
+  float meanAx = (float)(somaAx / amostras);
+  float meanAy = (float)(somaAy / amostras);
+  float meanAz = (float)(somaAz / amostras);
 
-  Serial.println("Calibrado!");
-  Serial.printf("Accel biases X/Y/Z (m/s2): %.3f, %.3f, %.3f\n", accelBiasX, accelBiasY, accelBiasZ);
-  Serial.printf("Gyro biases X/Y/Z (rad/s): %.4f, %.4f, %.4f\n", gyroBiasX, gyroBiasY, gyroBiasZ);
+  // Vetor de repouso medido
+  float mag = sqrt(meanAx * meanAx + meanAy * meanAy + meanAz * meanAz);
+
+  // Fator de escala: corrigir magnitude para 9.80665
+  accelScale = 9.80665f / mag;
+
+  // Vetor unitário da gravidade medida (direção real do sensor)
+  float gx = meanAx / mag;
+  float gy = meanAy / mag;
+  float gz = meanAz / mag;
+
+  // Bias: subtrair a gravidade na direção real do vetor medido
+  accelBiasX = meanAx - gx * 9.80665f;
+  accelBiasY = meanAy - gy * 9.80665f;
+  accelBiasZ = meanAz - gz * 9.80665f;
+
+  // Gyro: média simples (bias = offset)
+  gyroBiasX = (float)(somaGx / amostras);
+  gyroBiasY = (float)(somaGy / amostras);
+  gyroBiasZ = (float)(somaGz / amostras);
+
+  Serial.printf("Accel escala: %.4f | bias X/Y/Z (m/s2): %.3f, %.3f, %.3f\n",
+                accelScale, accelBiasX, accelBiasY, accelBiasZ);
+  Serial.printf("Gyro  bias X/Y/Z (rad/s): %.4f, %.4f, %.4f\n",
+                gyroBiasX, gyroBiasY, gyroBiasZ);
+
+  // ---- B. Validação pós-calibração ----
+  const int validacaoAmostras = 50;
+  somaAx = 0; somaAy = 0; somaAz = 0;
+  somaGx = 0; somaGy = 0; somaGz = 0;
+
+  for (int i = 0; i < validacaoAmostras; i++) {
+    mpu.getEvent(&a, &g, &temp);
+    float cx = a.acceleration.x * accelScale - accelBiasX;
+    float cy = a.acceleration.y * accelScale - accelBiasY;
+    float cz = a.acceleration.z * accelScale - accelBiasZ;
+    somaAx += cx; somaAy += cy; somaAz += cz;
+    somaGx += g.gyro.x - gyroBiasX;
+    somaGy += g.gyro.y - gyroBiasY;
+    somaGz += g.gyro.z - gyroBiasZ;
+    delay(5);
+  }
+
+  float vAx = (float)(somaAx / validacaoAmostras);
+  float vAy = (float)(somaAy / validacaoAmostras);
+  float vAz = (float)(somaAz / validacaoAmostras);
+  float vMag = sqrt(vAx * vAx + vAy * vAy + vAz * vAz);
+
+  float gRx = (float)(somaGx / validacaoAmostras) * 57.2958f;
+  float gRy = (float)(somaGy / validacaoAmostras) * 57.2958f;
+  float gRz = (float)(somaGz / validacaoAmostras) * 57.2958f;
+  float gResiduo = sqrt(gRx * gRx + gRy * gRy + gRz * gRz);
+
+  bool accelOk = (vMag >= 9.5f && vMag <= 10.1f);
+  bool gyroOk  = (gResiduo <= 5.0f);
+
+  if (!accelOk || !gyroOk) {
+    salvar_erro("Calibracao MPU suspeita! Accel |v|=%.2f m/s2 (esperado ~9.81), gyro residuo=%.2f graus/s",
+                vMag, gResiduo);
+  } else {
+    Serial.printf("Validacao OK: |a|=%.2f m/s2, gyro_residuo=%.2f graus/s\n", vMag, gResiduo);
+  }
 }
 
 void getInitialAltitude() {
@@ -425,8 +481,8 @@ void loop() {
   if (mpuOk) {
     sensors_event_t a, g, temp; 
     mpu.getEvent(&a, &g, &temp); 
-    accX = a.acceleration.x - accelBiasX; accY = a.acceleration.y - accelBiasY;
-    accZ = a.acceleration.z - accelBiasZ; 
+    accX = a.acceleration.x * accelScale - accelBiasX; accY = a.acceleration.y * accelScale - accelBiasY;
+    accZ = a.acceleration.z * accelScale - accelBiasZ; 
     gyroX = g.gyro.x - gyroBiasX; gyroY = g.gyro.y - gyroBiasY; gyroZ = g.gyro.z - gyroBiasZ; tempMpu = temp.temperature;
   }
 
