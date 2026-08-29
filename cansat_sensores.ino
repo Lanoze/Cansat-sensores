@@ -74,6 +74,13 @@ uint32_t tamanhoDadosAudio = 0;
 
 const int SAMPLE_RATE = 16000;
 
+// ---------- CALIBRAÇÃO (mesma abordagem da aviônica) ----------
+#define PERFORM_CALIBRATION true
+const int altitudeReadQuantity = 5; // Leituras para a altitude inicial
+float initialAltitude = 0;          // Offset de altitude medido no solo
+float accelBiasX = 0, accelBiasY = 0, accelBiasZ = 0;
+float gyroBiasX = 0, gyroBiasY = 0, gyroBiasZ = 0;
+
 // Protótipos
 void sdInit(void);
 void i2sInit(void);
@@ -231,6 +238,57 @@ void esvaziarBufferErrosPreSD() {
   }
 }
 
+// =====================
+// CALIBRAÇÃO (espelhando a aviônica)
+// =====================
+void calibrarMPU() {
+  Serial.println("Calibrando MPU6050...");
+  Serial.println("Mantenha a placa nivelada e parada por 5 segundos.");
+  delay(5000);
+
+  const int amostras = 100;
+  sensors_event_t a, g, temp;
+  double somaAx = 0, somaAy = 0, somaAz = 0;
+  double somaGx = 0, somaGy = 0, somaGz = 0;
+  int lidas = 0;
+
+  for (int i = 0; i < amostras; i++) {
+    mpu.getEvent(&a, &g, &temp);
+    somaAx += a.acceleration.x; somaAy += a.acceleration.y; somaAz += a.acceleration.z;
+    somaGx += g.gyro.x;         somaGy += g.gyro.y;         somaGz += g.gyro.z;
+    lidas++;
+    delay(10);
+  }
+
+  accelBiasX = (float)(somaAx / lidas);
+  accelBiasY = (float)(somaAy / lidas);
+  accelBiasZ = (float)(somaAz / lidas) - 9.80665f; // remove a gravidade (placa nivelada, Z p/ cima)
+  gyroBiasX = (float)(somaGx / lidas);
+  gyroBiasY = (float)(somaGy / lidas);
+  gyroBiasZ = (float)(somaGz / lidas);
+
+  Serial.println("Calibrado!");
+  Serial.printf("Accel biases X/Y/Z (m/s2): %.3f, %.3f, %.3f\n", accelBiasX, accelBiasY, accelBiasZ);
+  Serial.printf("Gyro biases X/Y/Z (rad/s): %.4f, %.4f, %.4f\n", gyroBiasX, gyroBiasY, gyroBiasZ);
+}
+
+void getInitialAltitude() {
+  double soma = 0;
+  int lidas = 0;
+  for (int i = 0; i < altitudeReadQuantity; i++) {
+    float alt = bmp.readAltitude(SEALEVEL_HPA);
+    if (alt == alt) { // descarta NaN
+      soma += alt;
+      lidas++;
+    }
+    delay(50);
+  }
+  if (lidas > 0) {
+    initialAltitude = (float)(soma / lidas);
+  }
+  Serial.printf("Altitude inicial de referencia: %.2f m\n", initialAltitude);
+}
+
 void setup() {
   Serial.begin(115200);
   delay(1500); 
@@ -248,6 +306,7 @@ void setup() {
     mpu.setFilterBandwidth(MPU6050_BAND_21_HZ); 
     mpuOk = true;
     Serial.println("OK"); 
+    if (PERFORM_CALIBRATION) calibrarMPU();
   } else {
     salvar_erro("Sensor MPU6050 falhou na inicialização");
     Serial.println("FALHOU");
@@ -262,6 +321,8 @@ void setup() {
     salvar_erro("Sensor BMP280 falhou na inicialização");
     Serial.println("FALHOU");
   }
+
+  if (bmpOk) getInitialAltitude();
 
   Serial.print("SHT30: ");
   if (sht30.begin(0x44) || sht30.begin(0x45)) { 
@@ -359,15 +420,15 @@ void loop() {
   if (mpuOk) {
     sensors_event_t a, g, temp; 
     mpu.getEvent(&a, &g, &temp); 
-    accX = a.acceleration.x; accY = a.acceleration.y;
-    accZ = a.acceleration.z; 
-    gyroX = g.gyro.x; gyroY = g.gyro.y; gyroZ = g.gyro.z; tempMpu = temp.temperature;
+    accX = a.acceleration.x - accelBiasX; accY = a.acceleration.y - accelBiasY;
+    accZ = a.acceleration.z - accelBiasZ; 
+    gyroX = g.gyro.x - gyroBiasX; gyroY = g.gyro.y - gyroBiasY; gyroZ = g.gyro.z - gyroBiasZ; tempMpu = temp.temperature;
   }
 
   if (bmpOk) {
     tempBmp  = bmp.readTemperature(); 
     pressao  = bmp.readPressure() / 100.0F;
-    altitude = bmp.readAltitude(SEALEVEL_HPA); 
+    altitude = bmp.readAltitude(SEALEVEL_HPA) - initialAltitude; 
   }
 
   if (shtOk) {
