@@ -287,10 +287,13 @@ void calibrarMPU() {
   float gy = meanAy / mag;
   float gz = meanAz / mag;
 
-  // Bias: subtrair a gravidade na direção real do vetor medido
-  accelBiasX = meanAx - gx * 9.80665f;
-  accelBiasY = meanAy - gy * 9.80665f;
-  accelBiasZ = meanAz - gz * 9.80665f;
+  // Bias calculado DEPOIS da escala (resíduo — deve ser ~0 se escala estiver correta)
+  float scaledMeanX = meanAx * accelScale;
+  float scaledMeanY = meanAy * accelScale;
+  float scaledMeanZ = meanAz * accelScale;
+  accelBiasX = scaledMeanX - gx * 9.80665f;
+  accelBiasY = scaledMeanY - gy * 9.80665f;
+  accelBiasZ = scaledMeanZ - gz * 9.80665f;
 
   // Gyro: média simples (bias = offset)
   gyroBiasX = (float)(somaGx / amostras);
