@@ -65,6 +65,7 @@ bool micOk = false;
 const char* LOG_FILE = "/data.csv"; 
 const char* AUDIO_FILE = "/voo.wav";
 const char* ERROR_FILE = "/erros.txt";
+const char* CSV_CABECALHO = "Pacote,Tempo_ms,AccX,AccY,AccZ,GyroX,GyroY,GyroZ,Temp_MPU(C),Temp_BMP(C),Pressao(hPa),Altitude(m),Temp_SHT(C),Umidade_SHT(%),Temp_DS18B20(C)\r\n";
 
 uint32_t pacoteId = 1; 
 
@@ -86,6 +87,7 @@ void sdInit(void);
 void i2sInit(void);
 bool verificaMicrofoneINMP441(void);
 void atualizarCabecalhoWAV(FsFile &arquivo);
+void escreverCabecalhoCSV(void);
 void sdManagerTask(void *pvParameters);
 void enviaParaRAM(float accX, float accY, float accZ, float gyroX, float gyroY, float gyroZ, float tempMpu, float tempBmp, float pressao, float altitude, float tempSht, float umidSht, float tempDs);
 
@@ -147,6 +149,13 @@ void atualizarCabecalhoWAV(FsFile &arquivo) {
   }
 }
 
+//Escreve a linha de cabeçalho somente se o CSV estiver vazio (novo arquivo)
+void escreverCabecalhoCSV() {
+  if (!csvFile || csvFile.size() != 0) return;
+  csvFile.print(CSV_CABECALHO);
+  csvFile.sync();
+}
+
 //Erros de montagem ficam no buffer pré-SD e são despejados quando o cartão monta
 bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   uint8_t tentativas = 0;
@@ -183,6 +192,7 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   // Reabre os arquivos de dados para evitar handles obsoletos (stale handles)
   if (csvFile) csvFile.close();
   csvFile = SD.open(LOG_FILE, O_WRITE | O_CREAT | O_APPEND);
+  escreverCabecalhoCSV(); //Se o cartão criou um CSV novo durante a recuperação, garante o cabeçalho
 
   if (audioFile) {
     audioFile.close();
@@ -368,13 +378,8 @@ void setup() {
     // Despeja no arquivo os erros que ocorreram antes do SD estar pronto
     esvaziarBufferErrosPreSD();
 
-    bool csvExistia = SD.exists(LOG_FILE);
-
     csvFile = SD.open(LOG_FILE, O_WRITE | O_CREAT | O_APPEND);
-    if (!csvExistia && csvFile) { //Só adiciona a linha inicial se não tinha um CSV antes
-      csvFile.print("Pacote,Tempo_ms,AccX,AccY,AccZ,GyroX,GyroY,GyroZ,Temp_MPU(C),Temp_BMP(C),Pressao(hPa),Altitude(m),Temp_SHT(C),Umidade_SHT(%),Temp_DS18B20(C)\r\n");
-      csvFile.sync();
-    }
+    escreverCabecalhoCSV(); //Só adiciona o cabeçalho se o CSV for novo (vazio)
 
     if (SD.exists(AUDIO_FILE)) {
       if (!SD.remove(AUDIO_FILE)) {
