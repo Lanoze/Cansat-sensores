@@ -82,6 +82,8 @@ float initialAltitude = 0;          // Offset de altitude medido no solo
 float accelBiasX = 0, accelBiasY = 0, accelBiasZ = 0;
 float accelScale = 1.0f;
 float gyroBiasX = 0, gyroBiasY = 0, gyroBiasZ = 0;
+float shtTempOffset = 0;  // Offset SHT30 vs BMP280
+float dsTempOffset = 0;   // Offset DS18B20 vs SHT30
 
 // Protótipos
 void sdInit(void);
@@ -355,6 +357,52 @@ void getInitialAltitude() {
   Serial.printf("Altitude inicial de referencia: %.2f m\n", initialAltitude);
 }
 
+// =====================
+// CALIBRAÇÃO DE TEMPERATURA (SHT30 + DS18B20)
+// =====================
+void calibrarTemperatura() {
+  const int amostras = 10;
+  float somaBmp = 0, somaSht = 0, somaDs = 0;
+  int nBmp = 0, nSht = 0, nDs = 0;
+
+  Serial.println("Calibrando sensores de temperatura...");
+  for (int i = 0; i < amostras; i++) {
+    if (bmpOk)  { somaBmp += bmp.readTemperature();   nBmp++; }
+    if (shtOk)  { somaSht += sht30.readTemperature();  nSht++; }
+    if (dsOk)   { ds18b20.requestTemperatures();
+                  somaDs += ds18b20.getTempCByIndex(0); nDs++; }
+    delay(100);
+  }
+
+  float mediaBmp = nBmp > 0 ? somaBmp / nBmp : 0;
+  float mediaSht = nSht > 0 ? somaSht / nSht : 0;
+  float mediaDs  = nDs  > 0 ? somaDs  / nDs  : 0;
+
+  // SHT30 é mais preciso (±0.3°C) → usa BMP como referência relativa
+  if (nSht > 0 && nBmp > 0) {
+    shtTempOffset = mediaSht - mediaBmp;
+    Serial.printf("SHT30 vs BMP: media SHT=%.2f, media BMP=%.2f, offset=%.3f C\n",
+                  mediaSht, mediaBmp, shtTempOffset);
+  }
+
+  // DS18B20 usa SHT30 como referência (mais preciso)
+  if (nDs > 0 && nSht > 0) {
+    dsTempOffset = mediaDs - mediaSht;
+    Serial.printf("DS18B20 vs SHT: media DS=%.2f, media SHT=%.2f, offset=%.3f C\n",
+                  mediaDs, mediaSht, dsTempOffset);
+  }
+
+  // Validação: offsets fora de ±5°C indicam problema
+  bool shtOk2 = (nSht == 0) || (fabs(shtTempOffset) <= 5.0f);
+  bool dsOk2  = (nDs  == 0) || (fabs(dsTempOffset)  <= 5.0f);
+
+  if (!shtOk2 || !dsOk2) {
+    salvar_erro("Calibracao temperatura suspeita! shtOffset=%.3f, dsOffset=%.3f", shtTempOffset, dsTempOffset);
+  } else {
+    Serial.printf("Calibracao temperatura OK: shtOffset=%.3f C, dsOffset=%.3f C\n", shtTempOffset, dsTempOffset);
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   delay(1500); 
@@ -408,6 +456,9 @@ void setup() {
     salvar_erro("Sensor DS18B20 falhou na inicialização");
     Serial.println("FALHOU");
   }
+
+  // Calibra os offsets de temperatura após todos os sensores estarem prontos
+  if ((bmpOk || shtOk) && dsOk) calibrarTemperatura();
 
   // ----- INICIALIZAÇÃO I2S E SD -----
   i2sInit();
@@ -493,13 +544,13 @@ void loop() {
   }
 
   if (shtOk) {
-    tempSht = sht30.readTemperature(); 
+    tempSht = sht30.readTemperature() - shtTempOffset; 
     umidSht = sht30.readHumidity();
   }
 
   if (dsOk) {
     ds18b20.requestTemperatures(); 
-    tempDs = ds18b20.getTempCByIndex(0);
+    tempDs = ds18b20.getTempCByIndex(0) - dsTempOffset;
   }
 
   // Serial.println("\n===== LEITURA " + String(pacoteId) + " =====");
