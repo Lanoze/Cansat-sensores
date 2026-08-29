@@ -99,7 +99,9 @@ void enviaParaRAM(float accX, float accY, float accZ, float gyroX, float gyroY, 
 // CABEÇALHO WAV DINÂMICO
 // =====================
 void atualizarCabecalhoWAV(FsFile &arquivo) {
-  byte header[44];
+  if (tamanhoDadosAudio == 0) return; // Sem dados ainda, nada para atualizar
+
+  byte header[44] = {0}; // Inicializa com zeros (bytes residuais seguros)
   uint32_t tamanhoTotalArquivo = tamanhoDadosAudio + 36;
 
   uint16_t numChannels = 1;
@@ -211,7 +213,7 @@ bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
 
   if (audioFile) {
     audioFile.close();
-    audioFile = SD.open(AUDIO_FILE, O_WRITE | O_CREAT | O_APPEND);
+    audioFile = SD.open(AUDIO_FILE, O_WRITE | O_CREAT);
     if (audioFile) {
       tamanhoDadosAudio = audioFile.size() >= 44 ? audioFile.size() - 44 : 0;
       atualizarCabecalhoWAV(audioFile);
