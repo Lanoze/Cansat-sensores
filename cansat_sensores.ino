@@ -71,7 +71,8 @@ uint32_t pacoteId = 1;
 
 // Variáveis Globais de Controle do Áudio
 uint32_t tamanhoDadosAudio = 0;
-// uint8_t falhasConsecutivas = 0;
+uint8_t falhasConsecutivas = 0;
+const uint8_t MAX_FALHAS_CONSECUTIVAS = 3;
 
 const int SAMPLE_RATE = 16000;
 
@@ -162,7 +163,8 @@ void escreverCabecalhoCSV() {
 //Erros de montagem ficam no buffer pré-SD e são despejados quando o cartão monta
 bool montar_SD(uint8_t maximo_tentativas, uint8_t mhz){
   uint8_t tentativas = 0;
-  // Reinicia o barramento SPI fisicamente a cada teste para o SD aceitar a nova frequência
+  // Delay antes de resetar o SPI para evitar estado inválido (ex.: remoção quente do cartão)
+  delay(100);
   sd_spi.end(); 
   sd_spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
 
@@ -705,14 +707,21 @@ void sdManagerTask(void *pvParameters) {
       size_t bytesEscritos = audioFile.write((const uint8_t*)buffer16, bytesToWrite);
       
       if (bytesEscritos == bytesToWrite) {
-        // falhasConsecutivas = 0;
+        falhasConsecutivas = 0;
         tamanhoDadosAudio += bytesEscritos;
       } else {
         salvar_erro("Falha ao gravar áudio no arquivo WAV - err=0x%02X data=0x%02X",
                     (unsigned)SD.sdErrorCode(), (unsigned)SD.sdErrorData());
         falhas++;
-        if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){
+        falhasConsecutivas++;
+        if (falhasConsecutivas >= MAX_FALHAS_CONSECUTIVAS) {
+          salvar_erro("SD falhou %u vezes seguidas — desabilitando SD", (unsigned)falhasConsecutivas);
           sdOk = false;
+        } else {
+          vTaskDelay(pdMS_TO_TICKS(1000));
+          if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){
+            sdOk = false;
+          }
         }
       }
     }
@@ -734,6 +743,7 @@ void sdManagerTask(void *pvParameters) {
       if (temDadosParaGravar && sdOk && csvFile) {
         size_t escr = csvFile.print(localCsvBuffer);
         if(escr > 0) {
+          falhasConsecutivas = 0;
           if(numero_lote % 10 == 0){ //A cada 10 lotes
             Serial.printf("-> Lote %u CSV salvo no SD! Bytes: ", numero_lote);
             Serial.println(escr);
@@ -742,10 +752,16 @@ void sdManagerTask(void *pvParameters) {
           salvar_erro("O SD falhou na gravação do lote CSV - err=0x%02X data=0x%02X",
                       (unsigned)SD.sdErrorCode(), (unsigned)SD.sdErrorData());
           falhas++;
-          if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){
+          falhasConsecutivas++;
+          if (falhasConsecutivas >= MAX_FALHAS_CONSECUTIVAS) {
+            salvar_erro("SD falhou %u vezes seguidas — desabilitando SD", (unsigned)falhasConsecutivas);
             sdOk = false;
+          } else {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            if(!montar_SD(MAX_TENTATIVAS, SPI_FREQ_MHz)){
+              sdOk = false;
+            }
           }
-          // falhasConsecutivas++;
         }
         numero_lote++;
       }
